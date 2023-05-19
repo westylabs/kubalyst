@@ -1,0 +1,119 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: es-pv-volume
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/User/gregfee/code/colossus/mnt/es"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: es-pv-claim
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ranger-es
+spec:
+  ports:
+  - port: 9200
+    targetPort: 9200
+    name: serving
+  - port: 9300
+    targetPort: 9300
+    name: node-to-node
+  selector:
+    app: ranger-es
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ranger-es
+  labels:
+    service: ranger-es
+spec:
+  serviceName: ranger-es
+  replicas: 1
+  selector:
+    matchLabels:
+      service: ranger-es
+  template:
+    metadata:
+      labels:
+        service: ranger-es
+    spec:
+      terminationGracePeriodSeconds: 300
+      initContainers:
+      - name: fix-the-volume-permission
+        image: busybox
+        command:
+        - sh
+        - -c
+        - chown -R 1000:1000 /usr/share/elasticsearch/data
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: ranger-es-data
+          mountPath: /usr/share/elasticsearch/data
+      - name: increase-the-vm-max-map-count
+        image: busybox
+        command:
+        - sysctl
+        - -w
+        - vm.max_map_count=262144
+        securityContext:
+          privileged: true
+      - name: increase-the-ulimit
+        image: busybox
+        command:
+        - sh
+        - -c
+        - ulimit -n 65536
+        securityContext:
+          privileged: true
+      containers:
+      - name: elasticsearch
+        image: docker.elastic.co/elasticsearch/elasticsearch-oss:6.2.4
+        ports:
+        - containerPort: 9200
+          name: http
+        - containerPort: 9300
+          name: tcp
+        resources:
+          requests:
+            memory: 2Gi
+          limits:
+            memory: 4Gi
+        env:
+          - name: cluster.name
+            value: elasticsearch-cluster
+          - name: node.name
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: discovery.zen.ping.unicast.hosts
+            value: "elasticsearch-0.es.default.svc.cluster.local,elasticsearch-1.es.default.svc.cluster.local,elasticsearch-2.es.default.svc.cluster.local"
+          - name: ES_JAVA_OPTS
+            value: -Xms750m -Xmx750m
+        volumeMounts:
+        - name: ranger-es-data
+          mountPath: /usr/share/elasticsearch/data
+      volumes:
+      - name: ranger-es-data
+        persistentVolumeClaim:
+          claimName: es-pv-claim

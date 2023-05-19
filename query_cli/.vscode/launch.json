@@ -1,0 +1,159 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Parser Bootstrap12",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": ["tests/unit/test_parser.py::test_bootstrap12"]
+        },
+        {
+            "name": "Parser Bootstrap2",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": ["tests/unit/test_parser.py::test_bootstrap2"]
+        }, 
+        {
+            "name": "Parser Bootstrap3",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": ["tests/unit/test_parser.py::test_bootstrap3"]
+        },  
+        {
+            "name": "Parser Bootstrap4",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": ["tests/unit/test_parser.py::test_bootstrap4"]
+        },  
+        {
+            "name": "Parser Bootstrap5",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": ["tests/unit/test_parser.py::test_bootstrap5"]
+        },
+        {
+            "name": "Parser Bootstrap6",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": ["tests/unit/test_parser.py::test_bootstrap6"]
+        },                                            
+        {
+            "name": "Trino Basic Query",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": ["tests/unit/test_trino.py::test_basic_query"]
+        },  
+        {
+            "name": "Create Default Users",
+            "type": "python",
+            "request": "launch",
+            "module": "query.cli",
+            "args": ["create-default-users", "-o", "org123"]
+        }, 
+        {
+            "name": "Create Default Roles",
+            "type": "python",
+            "request": "launch",
+            "module": "query.cli",
+            "args": ["create-default-roles", "-o", "org123"]
+        },           
+        {
+            "name": "Create Default Bucket",
+            "type": "python",
+            "request": "launch",
+            "module": "query.cli",
+            "args": ["create-default-bucket",]
+        },                     
+        {
+            "name": "Run bootstrap1 script",
+            "type": "python",
+            "request": "launch",
+            "module": "query.cli",
+            "args": ["execute-script", "-o", "org123", "-f", "tests/unit/scripts/bootstrap1.sql", "-r", "tests/unit/scripts/replacements.json"]
+        }, 
+        {
+            "name": "Run bootstrap2 script",
+            "type": "python",
+            "request": "launch",
+            "module": "query.cli",
+            "justMyCode": false,
+            "args": ["execute-script", "-o", "org123", "-f", "tests/unit/scripts/bootstrap2.sql", "-r", "tests/unit/scripts/replacements.json"]
+        },      
+        {
+            "name": "Run bootstrap3 script",
+            "type": "python",
+            "request": "launch",
+            "module": "query.cli",
+            "justMyCode": false,
+            "args": ["execute-script", "-o", "org123", "-f", "tests/unit/scripts/bootstrap3.sql", "-r", "tests/unit/scripts/replacements.json"]
+        },              
+        {
+            "name": "Drop table",
+            "type": "python",
+            "request": "launch",
+            "module": "query.cli",
+            "args": ["execute", "-o", "org123", "-c", "use database testdatabase; use schema testschema; drop table testtable;"]
+        },  
+        {
+            "name": "Simple Query",
+            "type": "python",
+            "request": "launch",
+            "module": "query.cli",
+            "args": ["execute", "-c", "select * from my_table;"]
+        },   
+        {
+            "name": "Simple Snowflake Query",
+            "type": "python",
+            "request": "launch",
+            "module": "query.cli",
+            "args": ["execute-sql", "-c", "select * from my_table;"],
+            "justMyCode": false
+        },  
+        {
+            "name": "Current Database Schema",
+            "type": "python",
+            "request": "launch",
+            "module": "query.cli",
+            "args": ["execute-sql", "-c", "select current_database(), current_schema();"],
+            "justMyCode": false
+        },                         
+        {
+            "name": "Create Table",
+            "type": "python",
+            "request": "launch",
+            "module": "query.cli",
+            "args": ["execute", "-o", "org123", "-c", "use database testdatabase; use schema testschema; drop table testtable; create table testtable(field1 int, field2 varchar); insert into testtable(field1, field2) values (0, 'foo'), (1, 'bar');"]
+        },  
+        {
+            "name": "Create Stream",
+            "type": "python",
+            "request": "launch",
+            "module": "query.cli",
+            "args": ["execute", "-o", "org123", "-c", "use database testdatabase; use schema testschema; create stream teststream on table testtable;"]
+        },                                        
+        {
+            "name": "Get Policy",
+            "type": "python",
+            "request": "launch",
+            "module": "query.cli",
+            "args": ["get-policy", "-o", "org123", "-n", "test_policy"]
+        },
+        {
+            "name": "Forwards",
+            "type": "python",
+            "request": "launch",
+            "module": "query.cli",
+            "args": ["setup-port-forwards"]
+        },                      
+    ]
+}

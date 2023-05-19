@@ -1,0 +1,7 @@
+pytest
+click
+requests
+boto
+boto3
+apache-ranger
+snowflake-connector-python

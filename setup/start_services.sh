@@ -57,6 +57,7 @@ python main.py
 rq worker --with-schedule
 
 # query service
+# (new terminal)
 cd ../query
 virtualenv venv
 . venv/bin/activate
@@ -64,6 +65,7 @@ pip install -r requirements3.txt
 python main.py
 
 # Setup roles and users
+# (new terminal)
 cd ../query_cli
 . venv/bin/activate
 ./query_cli create-default-users -o org123

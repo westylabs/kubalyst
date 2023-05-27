@@ -6,6 +6,10 @@ cd hive-metastore-docker && ./build_image.sh && cd ..
 cd trino && ./build_image.sh && cd ..
 cd trino-ranger-demo/ranger-admin && ./build_image.sh && cd ../..
 
+# Set paths in yaml files to point to the current project root.
+# Otherwise they'll point to `/Users/gfee/code/collosus`
+./fix-k8s-paths.py *.yaml
+
 ### Minio Setup
 kubectl apply -f ./minio_dev.yaml
 # create bucket

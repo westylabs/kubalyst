@@ -117,9 +117,9 @@ def execute_sql(command) -> None:
         host="localhost",
         port=7782,
         protocol="http",
-        user='XXXX',
+        user='dude@sweet.com',
         password='XXXX',
-        account='XXXX',
+        account='org123',
         session_parameters={
             'QUERY_TAG': 'EndOfMonthFinancials',
         }

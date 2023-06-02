@@ -1,9 +1,11 @@
 from typing import Optional, Dict
 import json
 import time
+import os
 
 import click
 import snowflake.connector
+import psutil
 
 from query import services
 from query.entities import users, roles
@@ -13,6 +15,10 @@ from query.trino import query as trino_query
 from query.s3 import service as s3_service
 from query.query_service import service as query_service
 from query.kube_utils import forward
+
+
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".."))
 
 
 def _templatize_script(
@@ -164,7 +170,20 @@ def run_services() -> None:
     time.sleep(2)
     input("Press Enter to terminate...")
     for process in processes:
-        process.terminate()        
+        process.terminate()   
+
+
+@click.command()     
+def kill_all() -> None:
+    for p in psutil.process_iter():
+        try:
+            cmd_line = ' '.join(p.cmdline())
+            if ROOT_DIR in cmd_line and "query_cli" not in cmd_line:
+                print("Killing {}: {}".format(p.pid, cmd_line))
+                p.terminate()
+                p.wait()    
+        except:
+            pass
 
 
 @click.group()
@@ -179,6 +198,7 @@ cli.add_command(create_default_roles)
 cli.add_command(create_default_users)
 cli.add_command(create_default_bucket)
 cli.add_command(create_trino_ranger_service)
+cli.add_command(kill_all)
 cli.add_command(show_tables)
 cli.add_command(execute)
 cli.add_command(execute_sql)

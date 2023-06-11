@@ -8,7 +8,7 @@ spec:
   ports:
   - port: 8080
     targetPort: 8080
-    protocol: TCP    
+    protocol: TCP
   selector:
     app: trino-coordinator
 ---
@@ -31,7 +31,7 @@ spec:
       - name: trino
         image: gfee/trino-ranger
         ports:
-        - containerPort: 8080          
+        - containerPort: 8080
         env:
         - name: AWS_ACCESS_KEY_ID
           value: minio_root_user
@@ -51,14 +51,14 @@ spec:
       - configMap:
           defaultMode: 420
           name: trino-catalogs
-        name: catalog-volume        
+        name: catalog-volume
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: trino-worker
 spec:
-  serviceName: trino-worker 
+  serviceName: trino-worker
   replicas: 1
   selector:
     matchLabels:
@@ -74,7 +74,7 @@ spec:
       - name: trino
         image: gfee/trino-ranger
         ports:
-        - containerPort: 8080       
+        - containerPort: 8080
         env:
         - name: AWS_ACCESS_KEY_ID
           value: minio_root_user
@@ -94,4 +94,4 @@ spec:
       - configMap:
           defaultMode: 420
           name: trino-catalogs
-        name: catalog-volume            
+        name: catalog-volume

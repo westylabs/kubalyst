@@ -71,7 +71,7 @@ spec:
         - name: MYSQL_PASSWORD
           value: admin
         - name: MYSQL_DATABASE
-          value: metastore_db        
+          value: metastore_db
         ports:
         - containerPort: 3306
           name: mysql
@@ -79,7 +79,7 @@ spec:
         - name: mariadb-for-hive
           mountPath: /var/lib/mysql
         - name: mysql-initdb
-          mountPath: /docker-entrypoint-initdb.d          
+          mountPath: /docker-entrypoint-initdb.d
         resources:
           requests:
             memory: "2G"
@@ -90,4 +90,4 @@ spec:
           claimName: maria-pv-claim
       - name: mysql-initdb
         configMap:
-          name: mysql-initdb-config          
+          name: mysql-initdb-config

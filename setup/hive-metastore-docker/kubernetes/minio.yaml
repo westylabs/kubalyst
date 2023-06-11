@@ -28,5 +28,3 @@ spec:
           args:
             - server
             - /data
-
-

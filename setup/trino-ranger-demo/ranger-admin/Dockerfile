@@ -23,4 +23,4 @@ COPY install_mysql.properties /root/ranger-2.1.0-admin/install.properties
 COPY mysql-connector-java.jar /root/
 COPY entrypoint.sh /root/
 
-ENTRYPOINT ["sh", "-c", "/root/entrypoint.sh"]   
+ENTRYPOINT ["sh", "-c", "/root/entrypoint.sh"]

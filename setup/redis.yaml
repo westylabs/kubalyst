@@ -15,7 +15,7 @@ spec:
     port: 6379
     targetPort: 6379
   selector:
-    app: redis  
+    app: redis
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -30,7 +30,7 @@ spec:
   template:
     metadata:
       labels:
-        app: redis  
+        app: redis
     spec:
       containers:
       - name: redis

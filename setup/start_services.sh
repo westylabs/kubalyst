@@ -41,7 +41,7 @@ pip install -r requirements3.txt
 aws s3api create-bucket --bucket hive --endpoint-url http://localhost:9000
 
 # Run all the non-kube services
-# Orgdata service 
+# Orgdata service
 # (new terminal)
 cd ../orgdata
 virtualenv venv

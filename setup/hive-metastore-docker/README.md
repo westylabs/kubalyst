@@ -3,7 +3,7 @@
 ### About
 
 Example of running standalone Hive Metastore. Minio is used as S3 storage for external
-tables.  
+tables.
 
 It contains following containers:
 - mariadb as dependency
@@ -24,7 +24,7 @@ You can now connect to it using hive or spark application.
 
 ### Hive
 
-Download and untar hive first.  
+Download and untar hive first.
 Then copy conf/metastore-site.xml to hive $HIVE_HOME/conf/hive-site.xml
 
 Before running hive make sure you export:
@@ -32,16 +32,16 @@ Before running hive make sure you export:
 export JAVA_HOME=/java/home
 export HADOOP_HOME=/your/local/hadoop/path
 export HADOOP_CLASSPATH=${HADOOP_HOME}/share/hadoop/tools/lib/aws-java-sdk-bundle-1.11.375.jar:${HADOOP_HOME}/share/hadoop/tools/lib/hadoop-aws-3.2.0.jar
-``` 
+```
 
-`HADOOP_CLASSPATH` is not mandatory if you do not want to use S3 
+`HADOOP_CLASSPATH` is not mandatory if you do not want to use S3
 
 
 then run:
 
 ```
 $ $HIVE_HOME/bin/hive
-``` 
+```
 
 you shuld see some hive objects if connection works correctly
 
@@ -65,4 +65,3 @@ val spark = SparkSession
       .enableHiveSupport()
       .getOrCreate()
 ```
-

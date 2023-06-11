@@ -8,7 +8,7 @@ spec:
   ports:
   - port: 8080
     targetPort: 8080
-    protocol: TCP    
+    protocol: TCP
   selector:
     app: trino-coordinator
 ---
@@ -98,7 +98,7 @@ kind: StatefulSet
 metadata:
   name: trino-worker
 spec:
-  serviceName: trino-worker 
+  serviceName: trino-worker
   replicas: 1
   selector:
     matchLabels:
@@ -150,7 +150,7 @@ spec:
             name: trino-configs
         - name: trino-tmp-data
           persistentVolumeClaim:
-            claimName: trino-pv-claim        
+            claimName: trino-pv-claim
 ---
 apiVersion: v1
 kind: Pod

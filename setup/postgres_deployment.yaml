@@ -11,7 +11,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/User/gregfee/code/colossus/mnt/pg-db"    
+    path: "/User/gregfee/code/colossus/mnt/pg-db"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -35,7 +35,7 @@ spec:
     targetPort: 5432
     protocol: TCP
   selector:
-    app: postgres 
+    app: postgres
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -57,7 +57,7 @@ spec:
         image: postgres
         env:
         - name: POSTGRES_PASSWORD
-          value: "postgres"        
+          value: "postgres"
         ports:
         - containerPort: 5432
           name: postgres

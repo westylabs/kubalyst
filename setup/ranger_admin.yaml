@@ -11,7 +11,7 @@ spec:
   selector:
     app: ranger
   externalIPs:
-  - 1.1.1.1    
+  - 1.1.1.1
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -30,9 +30,8 @@ spec:
     spec:
       containers:
       - name: ranger-admin
-        image: gfee/ranger-admin    
+        image: gfee/ranger-admin
         ports:
         - containerPort: 6080
           name: ranger-admin
-        imagePullPolicy: Never            
-
+        imagePullPolicy: Never

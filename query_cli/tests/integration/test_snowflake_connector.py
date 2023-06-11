@@ -124,8 +124,11 @@ def _run_statement(con: snowflake.connector.SnowflakeConnection, statement: Stat
             assert len(result) == len(statement.expected_results)
             for result_row, expected_result_row in zip(result, statement.expected_results):
                 assert len(result_row) == len(expected_result_row)
-                for result_field, expected_result_field in zip(result_row, expected_result_row):
-                    assert result_field == expected_result_field
+                not_equal = []
+                for i, (result_field, expected_result_field) in enumerate(zip(result_row, expected_result_row)):
+                    if result_field != expected_result_field:
+                        not_equal.append((i, result_field, expected_result_field))
+                assert not_equal == []
     except snowflake.connector.errors.ProgrammingError as e:
         assert statement.error is not None, e
         assert e.errno == statement.error[0]
@@ -150,19 +153,19 @@ def test_schema_lifetime(all_services) -> None:
             expected_result=[["Statement executed successfully."]],
         ),
         Statement(
-            "drop schema if exists test1",
+            "drop schema if exists testschema1",
         ),
         Statement(
-            "drop schema if exists test1",
-            expected_result=[["Drop statement executed successfully (TEST1 already dropped)."]],
+            "drop schema if exists testschema1",
+            expected_result=[["Drop statement executed successfully (TESTSCHEMA1 already dropped)."]],
         ),
         Statement(
-            "create schema test1",
-            expected_result=[["Schema TEST1 successfully created."]],
+            "create schema testschema1",
+            expected_result=[["Schema TESTSCHEMA1 successfully created."]],
         ),
         Statement(
-            "drop schema if exists test1",
-            expected_result=[["TEST1 successfully dropped."]],
+            "drop schema if exists testschema1",
+            expected_result=[["TESTSCHEMA1 successfully dropped."]],
         ),
     ])
 
@@ -326,7 +329,7 @@ def test_table_timestamp(all_services) -> None:
     _run_statement(
         con,
         Statement(
-            "select tsltz from test_ts",
+            "select tsltz, tsntz, tstz from test_ts",
             expected_result=[
                 (
                     datetime(2023, 1, 1, 1, 1, 1, tzinfo=pytz.timezone('America/Los_Angeles')),

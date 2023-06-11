@@ -1,4 +1,10 @@
+from decimal import Decimal
 from typing import List, Optional, Any, Tuple
+from datetime import datetime
+
+import pytz
+
+
 import snowflake.connector
 
 
@@ -100,8 +106,9 @@ class Statement():
         self.error = error
 
 
-def _run_test(statements: List[Statement]) -> None:
-    con = snowflake.connector.connect(
+
+def _connect() -> snowflake.connector.SnowflakeConnection:
+    return snowflake.connector.connect(
         host="localhost",
         port=7782,
         protocol="http",
@@ -111,26 +118,34 @@ def _run_test(statements: List[Statement]) -> None:
         session_parameters={
             'QUERY_TAG': 'EndOfMonthFinancials',
         }
-    )
+    )    
+
+
+def _run_statement(con: snowflake.connector.SnowflakeConnection, statement: Statement) -> None:
+    try:
+        cursor = con.cursor().execute(statement.sql_statement)
+        if statement.expected_results is not None:
+            result = cursor.fetchall()
+            assert len(result) == len(statement.expected_results)
+            for result_row, expected_result_row in zip(result, statement.expected_results):
+                assert len(result_row) == len(expected_result_row)
+                for result_field, expected_result_field in zip(result_row, expected_result_row):
+                    assert result_field == expected_result_field
+    except snowflake.connector.errors.ProgrammingError as e:
+        assert statement.error is not None, e
+        assert e.errno == statement.error[0]
+        assert e.sqlstate == statement.error[1]
+        assert statement.error[2] in e.msg
+
+
+def _run_test(statements: List[Statement]) -> None:
+    con = _connect()
 
     for statement in statements:
-        try:
-            cursor = con.cursor().execute(statement.sql_statement)
-            if statement.expected_results is not None:
-                result = cursor.fetchall()
-                assert len(result) == len(statement.expected_results)
-                for result_row, expected_result_row in zip(result, statement.expected_results):
-                    assert len(result_row) == len(expected_result_row)
-                    for result_field, expected_result_field in zip(result_row, expected_result_row):
-                        assert result_field == expected_result_field
-        except snowflake.connector.errors.ProgrammingError as e:
-            assert statement.error is not None
-            assert e.errno == statement.error[0]
-            assert e.sqlstate == statement.error[1]
-            assert statement.error[2] in e.msg
+        _run_statement(statement)
 
 
-def test_schema_lifetime() -> None:
+def test_schema_lifetime(all_services) -> None:
     _run_test([
         Statement(
             "create or replace database testdb",
@@ -169,3 +184,172 @@ def test_schema_lifetime() -> None:
             error=(1003, "42000", "SQL compilation error:\nsyntax error line 1 at position 5 unexpected 'if'."),
         ),        
     ])
+
+
+def test_table_describe(all_services) -> None:
+    _run_test([
+        Statement(
+            "create or replace database testdb",
+        ),
+        Statement(
+            "use database testdb",
+            expected_result=[["Statement executed successfully."]],
+        ),
+        Statement(
+            "create schema if not exists test1",
+        ),        
+        Statement(
+            "use schema test1",
+            expected_result=[["Statement executed successfully."]],
+        ),
+        Statement(
+            "CREATE OR REPLACE TABLE test_fixed(num NUMBER, num10 NUMBER(10,1), dec DECIMAL(20,2), numeric NUMERIC(30,3), int INT, integer INTEGER);",
+            expected_result=[["Table TEST_FIXED successfully created."]],
+        ),
+        Statement(
+            "DESC TABLE test_fixed",
+            expected_result=[
+                ('NUM', 'NUMBER(38,0)', 'COLUMN', "Y", None, "N", "N", None, None, None, None),
+                ('NUM10', 'NUMBER(10,1)', 'COLUMN', "Y", None, "N", "N", None, None, None, None),
+                ('DEC', 'NUMBER(20,2)', 'COLUMN', "Y", None, "N", "N", None, None, None, None),
+                ('NUMERIC', 'NUMBER(30,3)', 'COLUMN', "Y", None, "N", "N", None, None, None, None),
+                ('INT', 'NUMBER(38,0)', 'COLUMN', "Y", None, "N", "N", None, None, None, None),
+                ('INTEGER', 'NUMBER(38,0)', 'COLUMN', "Y", None, "N", "N", None, None, None, None),
+            ],
+        ),
+        Statement(
+            "CREATE OR REPLACE TABLE test_float(d DOUBLE, f FLOAT, dp DOUBLE PRECISION, r REAL);",
+            expected_result=[["Table TEST_FLOAT successfully created."]]            
+        ),
+        Statement(
+            "DESC TABLE test_float",
+            expected_result=[
+                ('D', 'FLOAT', 'COLUMN', "Y", None, "N", "N", None, None, None, None),
+                ('F', 'FLOAT', 'COLUMN', "Y", None, "N", "N", None, None, None, None),
+                ('DP', 'FLOAT', 'COLUMN', "Y", None, "N", "N", None, None, None, None),
+                ('R', 'FLOAT', 'COLUMN', "Y", None, "N", "N", None, None, None, None),
+            ],
+        ),
+    ])
+   
+
+def test_table_query_numbers(all_services) -> None:
+    _run_test([
+        Statement(
+            "create or replace database testdb",
+        ),
+        Statement(
+            "use database testdb",
+            expected_result=[["Statement executed successfully."]],
+        ),
+        Statement(
+            "create schema if not exists test1",
+        ),        
+        Statement(
+            "use schema test1",
+            expected_result=[["Statement executed successfully."]],
+        ),        
+        Statement(
+            "CREATE OR REPLACE TABLE test_fixed(num NUMBER, num10 NUMBER(10,1), dec DECIMAL(20,2), numeric NUMERIC(30,3), int INT, integer INTEGER);",
+            expected_result=[["Table TEST_FIXED successfully created."]],
+        ),
+        Statement(
+            "INSERT INTO test_fixed VALUES(1.234E2, 15, 9, 1.234E+2, 11, 12)",
+            expected_result=[[1]]
+        ),
+        Statement(
+            "select * from test_fixed",
+            expected_result=[
+                (123, Decimal('15.0'), Decimal('9.00'), Decimal('1.234E+2'), 11, 12)
+            ]
+        ),
+        Statement(
+            "select num, dec, int from test_fixed",
+            expected_result=[
+                (123, Decimal('9'), 11)
+            ]
+        ),
+        Statement(
+            "CREATE OR REPLACE TABLE test_float(d DOUBLE, f FLOAT, dp DOUBLE PRECISION, r REAL);",
+            expected_result=[["Table TEST_FLOAT successfully created."]]            
+        ), 
+        Statement(
+            "INSERT INTO test_float VALUES(+1.34, 0.1, -1.2, 15e-03)",
+            expected_result=[[1]]
+        ),        
+        Statement(
+            "select * from test_float",
+            expected_result=[
+                (+1.34, 0.1, -1.2, 15e-03),
+            ]
+        ),                     
+    ]) 
+
+
+def test_table_timestamp(all_services) -> None:
+    con = _connect()
+    _run_statement(
+        con, 
+        Statement(
+            "create or replace database testdb",
+        )
+    )
+    _run_statement(
+        con,     
+        Statement(
+            "use database testdb",
+            expected_result=[["Statement executed successfully."]],
+        )
+    )
+    _run_statement(
+        con,     
+        Statement(
+            "create schema if not exists test1",
+        )
+    )
+    _run_statement(
+        con,     
+        Statement(
+            "use schema test1",
+            expected_result=[["Statement executed successfully."]],
+        )
+    )
+    _run_statement(
+        con,     
+        Statement(
+            "CREATE OR REPLACE TABLE test_ts(tsltz timestamp_ltz, tsntz timestamp_ntz, tstz timestamp_tz);",
+            expected_result=[["Table TEST_TS successfully created."]],
+        )
+    )
+    _run_statement(
+        con,     
+        Statement(
+            "INSERT INTO test_ts VALUES(to_timestamp('2023-01-01 01:01:01'), to_timestamp('2023-02-02 02:02:02'), to_timestamp('2023-03-03 03:03:03'))",
+            expected_result=[[1]]
+        )
+    )
+    _run_statement(
+        con,     
+        Statement(
+            "select tsltz from test_ts",
+            expected_result=[
+                (
+                    datetime(2023, 1, 1, 1, 1, 1, tzinfo=pytz.timezone('America/Los_Angeles')),
+                    datetime(2023, 2, 2, 2, 2, 2),
+                    datetime(2023, 3, 3, 3, 3, 3, tzinfo=pytz.FixedOffset(-480)),
+                )
+            ]   
+        )
+    )
+    _run_statement(
+        con,     
+        Statement(
+            "describe table test_ts",
+            expected_result=[
+                ('TSLTZ', 'TIMESTAMP_LTZ', 'COLUMN', "Y", None, "N", "N", None, None, None, None),
+                ('TSNTZ', 'TIMESTAMP_NTZ', 'COLUMN', "Y", None, "N", "N", None, None, None, None),
+                ('TSTZ', 'TIMESTAMP_TZ', 'COLUMN', "Y", None, "N", "N", None, None, None, None),
+            ],           
+        )                     
+    ) 
+

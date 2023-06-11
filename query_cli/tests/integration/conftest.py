@@ -44,7 +44,7 @@ def wait_for_healthy(label: str, port: int):
                 url=url,
                 headers={
                     'Accept': 'application/json',
-                },  
+                },
             )
             if r.status_code == 200:
                 success = True
@@ -81,7 +81,7 @@ def _run_taskman() -> List[Tuple[Any, str]]:
         [os.path.join(SCRIPT_DIR, "../../../taskman/run_worker.sh")],
         cwd=os.path.join(SCRIPT_DIR, "../../../taskman/"),
         shell=True
-    ) 
+    )
     return [p_tuple, (p2, "taskman_worker")]
 
 
@@ -98,21 +98,21 @@ def orgdata():
 
 @pytest.fixture(scope='session')
 def query():
-    procs_and_labels= _run_query()
+    procs_and_labels = _run_query()
     yield procs_and_labels
     process_terminator(procs_and_labels)
 
 
 @pytest.fixture(scope='session')
 def taskman():
-    procs_and_labels= _run_taskman()
+    procs_and_labels = _run_taskman()
     yield procs_and_labels
     process_terminator(procs_and_labels)
 
 
 @pytest.fixture(scope='session')
 def session():
-    procs_and_labels= _run_session()
+    procs_and_labels = _run_session()
     yield procs_and_labels
     process_terminator(procs_and_labels)
 
@@ -125,4 +125,4 @@ def all_services():
     p4 = _run_session()
     procs_and_labels = p1 + p2 + p3 + p4
     yield procs_and_labels
-    process_terminator(procs_and_labels)    
+    process_terminator(procs_and_labels)

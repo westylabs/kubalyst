@@ -11,4 +11,4 @@
     "ds.warehouse.autoSuspendSeconds": "600",
     "aws.source.iam.readerArn": "arn:this:is:a:fake:arn",
     "aws.source.events.s3Path": "s3://fakebucket/is/fun"
-}  
+}

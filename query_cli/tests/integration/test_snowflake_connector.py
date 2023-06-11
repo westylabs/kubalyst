@@ -4,10 +4,7 @@ from datetime import datetime
 
 import pytz
 
-
 import snowflake.connector
-
-
 
 
 def test_basic_error(all_services):
@@ -24,7 +21,7 @@ def test_basic_error(all_services):
     )
 
     try:
-        all_data = con.cursor().execute("select * from test").fetchall()
+        con.cursor().execute("select * from test").fetchall()
         assert False
     except snowflake.connector.errors.ProgrammingError:
         pass
@@ -43,8 +40,8 @@ def test_basic_ddl(all_services):
         }
     )
 
-    con.cursor().execute("create or replace database testdb1")  
-    con.cursor().execute("use database testdb1")  
+    con.cursor().execute("create or replace database testdb1")
+    con.cursor().execute("use database testdb1")
     con.cursor().execute("create or replace schema test2")
 
 
@@ -60,11 +57,11 @@ def test_basic_fetchall(all_services):
             'QUERY_TAG': 'EndOfMonthFinancials',
         }
     )
-    
+
     result = con.cursor().execute("create or replace database testdb1").fetchall()
     assert len(result) == 1
     assert 'successfully' in result[0][0]
-    
+
 
 def test_data_types(all_services):
     con = snowflake.connector.connect(
@@ -89,8 +86,7 @@ def test_data_types(all_services):
         "select * from test1.testtable",
     ]:
         print(f"executing statement {statement}")
-        values = con.cursor().execute(statement).fetchall()
-
+        con.cursor().execute(statement).fetchall()
 
 
 class Statement():
@@ -106,7 +102,6 @@ class Statement():
         self.error = error
 
 
-
 def _connect() -> snowflake.connector.SnowflakeConnection:
     return snowflake.connector.connect(
         host="localhost",
@@ -118,7 +113,7 @@ def _connect() -> snowflake.connector.SnowflakeConnection:
         session_parameters={
             'QUERY_TAG': 'EndOfMonthFinancials',
         }
-    )    
+    )
 
 
 def _run_statement(con: snowflake.connector.SnowflakeConnection, statement: Statement) -> None:
@@ -142,7 +137,7 @@ def _run_test(statements: List[Statement]) -> None:
     con = _connect()
 
     for statement in statements:
-        _run_statement(statement)
+        _run_statement(con, statement)
 
 
 def test_schema_lifetime(all_services) -> None:
@@ -156,19 +151,19 @@ def test_schema_lifetime(all_services) -> None:
         ),
         Statement(
             "drop schema if exists test1",
-        ),        
+        ),
         Statement(
             "drop schema if exists test1",
             expected_result=[["Drop statement executed successfully (TEST1 already dropped)."]],
-        ),  
+        ),
         Statement(
             "create schema test1",
             expected_result=[["Schema TEST1 successfully created."]],
-        ),          
+        ),
         Statement(
             "drop schema if exists test1",
             expected_result=[["TEST1 successfully dropped."]],
-        ),                
+        ),
     ])
 
     _run_test([
@@ -182,7 +177,7 @@ def test_schema_lifetime(all_services) -> None:
         Statement(
             "drop if exists schema",
             error=(1003, "42000", "SQL compilation error:\nsyntax error line 1 at position 5 unexpected 'if'."),
-        ),        
+        ),
     ])
 
 
@@ -197,7 +192,7 @@ def test_table_describe(all_services) -> None:
         ),
         Statement(
             "create schema if not exists test1",
-        ),        
+        ),
         Statement(
             "use schema test1",
             expected_result=[["Statement executed successfully."]],
@@ -219,7 +214,7 @@ def test_table_describe(all_services) -> None:
         ),
         Statement(
             "CREATE OR REPLACE TABLE test_float(d DOUBLE, f FLOAT, dp DOUBLE PRECISION, r REAL);",
-            expected_result=[["Table TEST_FLOAT successfully created."]]            
+            expected_result=[["Table TEST_FLOAT successfully created."]]
         ),
         Statement(
             "DESC TABLE test_float",
@@ -231,7 +226,7 @@ def test_table_describe(all_services) -> None:
             ],
         ),
     ])
-   
+
 
 def test_table_query_numbers(all_services) -> None:
     _run_test([
@@ -244,11 +239,11 @@ def test_table_query_numbers(all_services) -> None:
         ),
         Statement(
             "create schema if not exists test1",
-        ),        
+        ),
         Statement(
             "use schema test1",
             expected_result=[["Statement executed successfully."]],
-        ),        
+        ),
         Statement(
             "CREATE OR REPLACE TABLE test_fixed(num NUMBER, num10 NUMBER(10,1), dec DECIMAL(20,2), numeric NUMERIC(30,3), int INT, integer INTEGER);",
             expected_result=[["Table TEST_FIXED successfully created."]],
@@ -271,65 +266,65 @@ def test_table_query_numbers(all_services) -> None:
         ),
         Statement(
             "CREATE OR REPLACE TABLE test_float(d DOUBLE, f FLOAT, dp DOUBLE PRECISION, r REAL);",
-            expected_result=[["Table TEST_FLOAT successfully created."]]            
-        ), 
+            expected_result=[["Table TEST_FLOAT successfully created."]]
+        ),
         Statement(
             "INSERT INTO test_float VALUES(+1.34, 0.1, -1.2, 15e-03)",
             expected_result=[[1]]
-        ),        
+        ),
         Statement(
             "select * from test_float",
             expected_result=[
                 (+1.34, 0.1, -1.2, 15e-03),
             ]
-        ),                     
-    ]) 
+        ),
+    ])
 
 
 def test_table_timestamp(all_services) -> None:
     con = _connect()
     _run_statement(
-        con, 
+        con,
         Statement(
             "create or replace database testdb",
         )
     )
     _run_statement(
-        con,     
+        con,
         Statement(
             "use database testdb",
             expected_result=[["Statement executed successfully."]],
         )
     )
     _run_statement(
-        con,     
+        con,
         Statement(
             "create schema if not exists test1",
         )
     )
     _run_statement(
-        con,     
+        con,
         Statement(
             "use schema test1",
             expected_result=[["Statement executed successfully."]],
         )
     )
     _run_statement(
-        con,     
+        con,
         Statement(
             "CREATE OR REPLACE TABLE test_ts(tsltz timestamp_ltz, tsntz timestamp_ntz, tstz timestamp_tz);",
             expected_result=[["Table TEST_TS successfully created."]],
         )
     )
     _run_statement(
-        con,     
+        con,
         Statement(
             "INSERT INTO test_ts VALUES(to_timestamp('2023-01-01 01:01:01'), to_timestamp('2023-02-02 02:02:02'), to_timestamp('2023-03-03 03:03:03'))",
             expected_result=[[1]]
         )
     )
     _run_statement(
-        con,     
+        con,
         Statement(
             "select tsltz from test_ts",
             expected_result=[
@@ -338,18 +333,17 @@ def test_table_timestamp(all_services) -> None:
                     datetime(2023, 2, 2, 2, 2, 2),
                     datetime(2023, 3, 3, 3, 3, 3, tzinfo=pytz.FixedOffset(-480)),
                 )
-            ]   
+            ]
         )
     )
     _run_statement(
-        con,     
+        con,
         Statement(
             "describe table test_ts",
             expected_result=[
                 ('TSLTZ', 'TIMESTAMP_LTZ', 'COLUMN', "Y", None, "N", "N", None, None, None, None),
                 ('TSNTZ', 'TIMESTAMP_NTZ', 'COLUMN', "Y", None, "N", "N", None, None, None, None),
                 ('TSTZ', 'TIMESTAMP_TZ', 'COLUMN', "Y", None, "N", "N", None, None, None, None),
-            ],           
-        )                     
-    ) 
-
+            ],
+        )
+    )

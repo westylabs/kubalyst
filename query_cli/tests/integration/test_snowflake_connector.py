@@ -96,7 +96,7 @@ class Statement:
         self,
         sql_statement: str,
         expected_result: Optional[List[List[Any]]] = None,
-        error: Optional[Tuple[str, str, str]] = None,
+        error: Optional[Tuple[int, str, str]] = None,
     ) -> None:
         assert expected_result is None or error is None
         self.sql_statement = sql_statement
@@ -195,7 +195,7 @@ def test_schema_lifetime(all_services) -> None:
             Statement(
                 "drop if exists schema",
                 error=(
-                    "1003",
+                    1003,
                     "42000",
                     "SQL compilation error:\nsyntax error line 1 at position 5 unexpected 'if'.",
                 ),
@@ -474,8 +474,8 @@ def test_table_timestamp(all_services) -> None:
             "select tsltz, tsntz, tstz from test_ts",
             expected_result=[
                 [
-                    datetime(
-                        2023, 1, 1, 1, 1, 1, tzinfo=pytz.timezone("America/Los_Angeles")
+                    datetime(2023, 1, 1, 1, 1, 1).astimezone(
+                        pytz.timezone("America/Los_Angeles")
                     ),
                     datetime(2023, 2, 2, 2, 2, 2),
                     datetime(2023, 3, 3, 3, 3, 3, tzinfo=pytz.FixedOffset(-480)),

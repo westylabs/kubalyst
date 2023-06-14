@@ -63,9 +63,8 @@ def wait_for_healthy(label: str, port: int):
 
 def _run_service(dir_name, port_num) -> Tuple[Any, str]:
     p = subprocess.Popen(
-        dir_name,
-        cwd=os.path.join(SCRIPT_DIR, "../../../{}/".format(dir_name)),
-        shell=True,
+        ["python", "-m", "{}.main".format(dir_name)],
+        cwd=os.path.join(SCRIPT_DIR, "../../../"),
     )
     wait_for_healthy(dir_name, port_num)
     return p, dir_name

@@ -1,11 +1,13 @@
-from typing import List, Tuple, Any
-import subprocess
 import os
-import requests
+import subprocess
 import time
+from typing import Any
+from typing import List
+from typing import Tuple
 
 import psutil
 import pytest
+import requests
 
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -22,7 +24,9 @@ def process_terminator(procs_and_labels: List[Tuple[Any, str]]):
         try:
             _debug("Terminating {}".format(label))
             parent = psutil.Process(proc.pid)
-            for child in parent.children(recursive=True):  # or parent.children() for recursive=False
+            for child in parent.children(
+                recursive=True
+            ):  # or parent.children() for recursive=False
                 _debug("killing child")
                 child.kill()
             _debug("killing parent")
@@ -43,7 +47,7 @@ def wait_for_healthy(label: str, port: int):
             r = requests.get(
                 url=url,
                 headers={
-                    'Accept': 'application/json',
+                    "Accept": "application/json",
                 },
             )
             if r.status_code == 200:
@@ -61,7 +65,7 @@ def _run_service(dir_name, port_num) -> Tuple[Any, str]:
     p = subprocess.Popen(
         dir_name,
         cwd=os.path.join(SCRIPT_DIR, "../../../{}/".format(dir_name)),
-        shell=True
+        shell=True,
     )
     wait_for_healthy(dir_name, port_num)
     return p, dir_name
@@ -80,7 +84,7 @@ def _run_taskman() -> List[Tuple[Any, str]]:
     p2 = subprocess.Popen(
         "taskman_worker",
         cwd=os.path.join(SCRIPT_DIR, "../../../taskman/"),
-        shell=True
+        shell=True,
     )
     return [p_tuple, (p2, "taskman_worker")]
 
@@ -89,35 +93,35 @@ def _run_session() -> List[Tuple[Any, str]]:
     return [_run_service("session", 7783)]
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def orgdata():
     procs_and_labels = _run_orgdata()
     yield procs_and_labels
     process_terminator(procs_and_labels)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def query():
     procs_and_labels = _run_query()
     yield procs_and_labels
     process_terminator(procs_and_labels)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def taskman():
     procs_and_labels = _run_taskman()
     yield procs_and_labels
     process_terminator(procs_and_labels)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def session():
     procs_and_labels = _run_session()
     yield procs_and_labels
     process_terminator(procs_and_labels)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def all_services():
     p1 = _run_orgdata()
     p2 = _run_query()

@@ -59,7 +59,7 @@ def wait_for_healthy(label: str, port: int):
 
 def _run_service(dir_name, port_num) -> Tuple[Any, str]:
     p = subprocess.Popen(
-        [os.path.join(SCRIPT_DIR, "../../../{}/run_service.sh".format(dir_name))],
+        dir_name,
         cwd=os.path.join(SCRIPT_DIR, "../../../{}/".format(dir_name)),
         shell=True
     )
@@ -78,7 +78,7 @@ def _run_query() -> List[Tuple[Any, str]]:
 def _run_taskman() -> List[Tuple[Any, str]]:
     p_tuple = _run_service("taskman", 7785)
     p2 = subprocess.Popen(
-        [os.path.join(SCRIPT_DIR, "../../../taskman/run_worker.sh")],
+        "taskman_worker",
         cwd=os.path.join(SCRIPT_DIR, "../../../taskman/"),
         shell=True
     )

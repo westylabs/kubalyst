@@ -207,7 +207,6 @@ def kill_all() -> None:
             if _should_kill(cmd_line):
                 print("Killing {}: {}".format(p.pid, cmd_line))
                 p.terminate()
-                p.wait()
         except:  # noqa
             pass
 

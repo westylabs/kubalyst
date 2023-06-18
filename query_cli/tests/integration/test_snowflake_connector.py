@@ -108,18 +108,24 @@ class Statement:
         self.error = error
 
 
+CONNECTION = None
+
+
 def _connect() -> snowflake.connector.SnowflakeConnection:
-    return snowflake.connector.connect(
-        host="localhost",
-        port=7782,
-        protocol="http",
-        user="dude@sweet.com",
-        password="XXXX",
-        account="org123",
-        session_parameters={
-            "QUERY_TAG": "EndOfMonthFinancials",
-        },
-    )
+    global CONNECTION
+    if CONNECTION is None:
+        CONNECTION = snowflake.connector.connect(
+            host="localhost",
+            port=7782,
+            protocol="http",
+            user="dude@sweet.com",
+            password="XXXX",
+            account="org123",
+            session_parameters={
+                "QUERY_TAG": "EndOfMonthFinancials",
+            },
+        )
+    return CONNECTION
 
 
 def _run_statement(
@@ -143,7 +149,8 @@ def _run_statement(
                         and result_field != expected_result_field
                     ):
                         not_equal.append((i, result_field, expected_result_field))
-                assert not_equal == []
+                if not_equal != []:
+                    assert False
     except snowflake.connector.errors.ProgrammingError as e:
         assert statement.error is not None, e
         assert e.errno == statement.error[0]
@@ -156,6 +163,35 @@ def _run_test(statements: List[Statement]) -> None:
 
     for statement in statements:
         _run_statement(con, statement)
+
+
+def _standard_setup(con: snowflake.connector.SnowflakeConnection) -> None:
+    _run_statement(
+        con,
+        Statement(
+            "create or replace database testdb",
+        ),
+    )
+    _run_statement(
+        con,
+        Statement(
+            "use database testdb",
+            expected_result=[["Statement executed successfully."]],
+        ),
+    )
+    _run_statement(
+        con,
+        Statement(
+            "create schema if not exists test1",
+        ),
+    )
+    _run_statement(
+        con,
+        Statement(
+            "use schema test1",
+            expected_result=[["Statement executed successfully."]],
+        ),
+    )
 
 
 def test_schema_lifetime(all_services) -> None:
@@ -694,5 +730,146 @@ insert into xyz_table(id, obj) select 1, parse_json($${
         Statement(
             "select obj:country from xyz_table",
             expected_result=[['{"code":"US","name":"United States"}']],
+        ),
+    )
+
+
+def test_ascii(all_services) -> None:
+    con = _connect()
+    _standard_setup(con)
+    """ https://github.com/conduyt/core/issues/26
+    _run_statement(
+        con,
+        Statement(
+            "SELECT column1, ASCII(column1) FROM (values('!'), ('A'), ('a'), ('bcd'), (''), (null));",
+            expected_result=[
+                ["!", 33],
+                ["A", 65],
+                ["a", 97],
+                ["bcd", 98],
+                ["", 0],
+                [None, None],
+            ]
+        )
+    )
+    """
+
+
+def test_base64_encode(all_services) -> None:
+    con = _connect()
+    _standard_setup(con)
+    _run_statement(
+        con,
+        Statement(
+            "CREATE OR REPLACE TABLE binary_table (v VARCHAR, b BINARY, b64_string VARCHAR);",
+        ),
+    )
+    _run_statement(
+        con,
+        Statement(
+            "INSERT INTO binary_table (v) VALUES ('HELP')",
+        ),
+    )
+    _run_statement(
+        con,
+        Statement(
+            "UPDATE binary_table SET b = TO_BINARY(v, 'UTF-8');",
+        ),
+    )
+    _run_statement(
+        con,
+        Statement(
+            "UPDATE binary_table SET b64_string = BASE64_ENCODE(b);",
+        ),
+    )
+    _run_statement(
+        con,
+        Statement(
+            "SELECT v, b, b64_string FROM binary_table;",
+            expected_result=[["HELP", "48454C50", "SEVMUA=="]],
+        ),
+    )
+
+
+def test_base64_decode(all_services) -> None:
+    con = _connect()
+    _standard_setup(con)
+    _run_statement(
+        con,
+        Statement(
+            "SELECT BASE64_DECODE_STRING('U25vd2ZsYWtl');",
+            expected_result=[["Snowflake"]],
+        ),
+    )
+
+
+def test_bit_length(all_services) -> None:
+    con = _connect()
+    _standard_setup(con)
+    _run_statement(
+        con,
+        Statement(
+            "CREATE OR REPLACE TABLE bl (v VARCHAR, b BINARY);",
+        ),
+    )
+    _run_statement(
+        con,
+        Statement(
+            "INSERT INTO bl (v, b) VALUES ('abc', NULL), ('\\u0394', X'A1B2');",
+        ),
+    )
+
+
+"""
+    _run_statement(
+        con,
+        Statement(
+            "SELECT v, b, BIT_LENGTH(v), BIT_LENGTH(b) FROM bl ORDER BY v;",
+            expected_result=[
+                ["abc", None, 24, None],
+                ["Δ", "A1B2", 16, 16],
+            ],
+        ),
+    )
+"""
+
+
+def test_chr(all_services) -> None:
+    con = _connect()
+    _standard_setup(con)
+    _run_statement(
+        con,
+        Statement(
+            "SELECT column1, CHR(column1) FROM (VALUES(83), (33), (169), (8364), (0), (null));",
+            expected_result=[
+                [83, "S"],
+                [33, "!"],
+                [169, "©"],
+                [8364, "€"],
+                [0, "\x00"],
+                [None, None],
+            ],
+        ),
+    )
+
+
+def test_charindex(all_services) -> None:
+    con = _connect()
+    _run_statement(
+        con,
+        Statement(
+            "select charindex('ban', 'banana'), charindex('an', 'banana', 1), charindex('an', 'banana', 3);",
+            expected_result=[[1, 2, 4]],
+        ),
+    )
+
+
+def test_contains(all_services) -> None:
+    con = _connect()
+    _run_statement(
+        con,
+        Statement(
+            "select contains('banana', 'bana'), contains('banana', 'nope');",
+            expected_result=[[True, False]],
         ),
     )

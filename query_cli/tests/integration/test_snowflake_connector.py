@@ -13,19 +13,7 @@ import snowflake.connector
 ANY_VALUE: Dict[str, Any] = {}
 
 
-def test_basic_error(all_services):
-    con = snowflake.connector.connect(
-        host="localhost",
-        port=7782,
-        protocol="http",
-        user="XXXX",
-        password="XXXX",
-        account="XXXX",
-        session_parameters={
-            "QUERY_TAG": "EndOfMonthFinancials",
-        },
-    )
-
+def test_basic_error(all_services, con):
     try:
         con.cursor().execute("select * from test").fetchall()
         assert False
@@ -33,55 +21,19 @@ def test_basic_error(all_services):
         pass
 
 
-def test_basic_ddl(all_services):
-    con = snowflake.connector.connect(
-        host="localhost",
-        port=7782,
-        protocol="http",
-        user="dude@sweet.com",
-        password="XXXX",
-        account="org123",
-        session_parameters={
-            "QUERY_TAG": "EndOfMonthFinancials",
-        },
-    )
-
+def test_basic_ddl(all_services, con):
     con.cursor().execute("create or replace database testdb1")
     con.cursor().execute("use database testdb1")
     con.cursor().execute("create or replace schema test2")
 
 
-def test_basic_fetchall(all_services):
-    con = snowflake.connector.connect(
-        host="localhost",
-        port=7782,
-        protocol="http",
-        user="dude@sweet.com",
-        password="XXXX",
-        account="org123",
-        session_parameters={
-            "QUERY_TAG": "EndOfMonthFinancials",
-        },
-    )
-
+def test_basic_fetchall(all_services, con):
     result = con.cursor().execute("create or replace database testdb1").fetchall()
     assert len(result) == 1
     assert "successfully" in result[0][0]
 
 
-def test_data_types(all_services):
-    con = snowflake.connector.connect(
-        host="localhost",
-        port=7782,
-        protocol="http",
-        user="dude@sweet.com",
-        password="XXXX",
-        account="org123",
-        session_parameters={
-            "QUERY_TAG": "EndOfMonthFinancials",
-        },
-    )
-
+def test_data_types(all_services, con):
     for statement in [
         "create or replace database testdb1",
         "use database testdb1",
@@ -108,24 +60,11 @@ class Statement:
         self.error = error
 
 
-CONNECTION = None
-
-
-def _connect() -> snowflake.connector.SnowflakeConnection:
-    global CONNECTION
-    if CONNECTION is None:
-        CONNECTION = snowflake.connector.connect(
-            host="localhost",
-            port=7782,
-            protocol="http",
-            user="dude@sweet.com",
-            password="XXXX",
-            account="org123",
-            session_parameters={
-                "QUERY_TAG": "EndOfMonthFinancials",
-            },
-        )
-    return CONNECTION
+def _render_not_equal(not_equal: list[tuple[int, Any, Any]]) -> str:
+    lines = []
+    for index, result, expected in not_equal:
+        lines.append(f"at {index}: got `{result}`, but expected `{expected}`")
+    return "\n".join(lines)
 
 
 def _run_statement(
@@ -149,8 +88,8 @@ def _run_statement(
                         and result_field != expected_result_field
                     ):
                         not_equal.append((i, result_field, expected_result_field))
-                if not_equal != []:
-                    assert False, not_equal
+                if len(not_equal) != 0:
+                    assert False, _render_not_equal(not_equal)
     except snowflake.connector.errors.ProgrammingError as e:
         assert statement.error is not None, e
         assert e.errno == statement.error[0]
@@ -158,9 +97,9 @@ def _run_statement(
         assert statement.error[2] in e.msg
 
 
-def _run_test(statements: List[Statement]) -> None:
-    con = _connect()
-
+def _run_test(
+    con: snowflake.connector.SnowflakeConnection, statements: List[Statement]
+) -> None:
     for statement in statements:
         _run_statement(con, statement)
 
@@ -194,8 +133,9 @@ def _standard_setup(con: snowflake.connector.SnowflakeConnection) -> None:
     )
 
 
-def test_schema_lifetime(all_services) -> None:
+def test_schema_lifetime(all_services, con) -> None:
     _run_test(
+        con,
         [
             Statement(
                 "create or replace database testdb",
@@ -223,10 +163,11 @@ def test_schema_lifetime(all_services) -> None:
                 "drop schema if exists testschema1",
                 expected_result=[["TESTSCHEMA1 successfully dropped."]],
             ),
-        ]
+        ],
     )
 
     _run_test(
+        con,
         [
             Statement(
                 "create or replace database testdb",
@@ -243,12 +184,13 @@ def test_schema_lifetime(all_services) -> None:
                     "SQL compilation error:\nsyntax error line 1 at position 5 unexpected 'if'.",
                 ),
             ),
-        ]
+        ],
     )
 
 
-def test_table_describe(all_services) -> None:
+def test_table_describe(all_services, con) -> None:
     _run_test(
+        con,
         [
             Statement(
                 "create or replace database testdb",
@@ -412,12 +354,13 @@ def test_table_describe(all_services) -> None:
                     ],
                 ],
             ),
-        ]
+        ],
     )
 
 
-def test_table_query_numbers(all_services) -> None:
+def test_table_query_numbers(all_services, con) -> None:
     _run_test(
+        con,
         [
             Statement(
                 "create or replace database testdb",
@@ -465,12 +408,11 @@ def test_table_query_numbers(all_services) -> None:
                     [+1.34, 0.1, -1.2, 15e-03],
                 ],
             ),
-        ]
+        ],
     )
 
 
-def test_table_timestamp(all_services) -> None:
-    con = _connect()
+def test_table_timestamp(all_services, con) -> None:
     _run_statement(
         con,
         Statement(
@@ -575,8 +517,7 @@ def test_table_timestamp(all_services) -> None:
     )
 
 
-def test_table_variant(all_services) -> None:
-    con = _connect()
+def test_table_variant(all_services, con) -> None:
     _run_statement(
         con,
         Statement(
@@ -656,8 +597,7 @@ def test_table_variant(all_services) -> None:
     )
 
 
-def test_table_object(all_services) -> None:
-    con = _connect()
+def test_table_object(all_services, con) -> None:
     _run_statement(
         con,
         Statement(
@@ -734,8 +674,7 @@ insert into xyz_table(id, obj) select 1, parse_json($${
     )
 
 
-def test_ascii(all_services) -> None:
-    con = _connect()
+def test_ascii(all_services, con) -> None:
     _standard_setup(con)
     """ https://github.com/conduyt/core/issues/26
     _run_statement(
@@ -755,8 +694,7 @@ def test_ascii(all_services) -> None:
     """
 
 
-def test_base64_encode(all_services) -> None:
-    con = _connect()
+def test_base64_encode(all_services, con) -> None:
     _standard_setup(con)
     _run_statement(
         con,
@@ -786,8 +724,7 @@ def test_base64_encode(all_services) -> None:
     )
 
 
-def test_base64_decode(all_services) -> None:
-    con = _connect()
+def test_base64_decode(all_services, con) -> None:
     _standard_setup(con)
     _run_statement(
         con,
@@ -798,8 +735,7 @@ def test_base64_decode(all_services) -> None:
     )
 
 
-def test_bit_length(all_services) -> None:
-    con = _connect()
+def test_bit_length(all_services, con) -> None:
     _standard_setup(con)
     _run_statement(
         con,
@@ -829,8 +765,7 @@ def test_bit_length(all_services) -> None:
 """
 
 
-def test_chr(all_services) -> None:
-    con = _connect()
+def test_chr(all_services, con) -> None:
     _standard_setup(con)
     _run_statement(
         con,
@@ -848,8 +783,7 @@ def test_chr(all_services) -> None:
     )
 
 
-def test_charindex(all_services) -> None:
-    con = _connect()
+def test_charindex(all_services, con) -> None:
     _run_statement(
         con,
         Statement(
@@ -859,8 +793,7 @@ def test_charindex(all_services) -> None:
     )
 
 
-def test_contains(all_services) -> None:
-    con = _connect()
+def test_contains(all_services, con) -> None:
     _run_statement(
         con,
         Statement(
@@ -870,8 +803,7 @@ def test_contains(all_services) -> None:
     )
 
 
-def test_div0(all_services) -> None:
-    con = _connect()
+def test_div0(all_services, con) -> None:
     _run_statement(
         con,
         Statement(
@@ -888,8 +820,7 @@ def test_div0(all_services) -> None:
     )
 
 
-def test_editdistance(all_services) -> None:
-    con = _connect()
+def test_editdistance(all_services, con) -> None:
     _run_statement(
         con,
         Statement(
@@ -899,8 +830,7 @@ def test_editdistance(all_services) -> None:
     )
 
 
-def test_endswith(all_services) -> None:
-    con = _connect()
+def test_endswith(all_services, con) -> None:
     _run_statement(
         con,
         Statement(
@@ -910,8 +840,7 @@ def test_endswith(all_services) -> None:
     )
 
 
-def test_exp(all_services) -> None:
-    con = _connect()
+def test_exp(all_services, con) -> None:
     _run_statement(
         con,
         Statement(
@@ -921,8 +850,7 @@ def test_exp(all_services) -> None:
     )
 
 
-def test_hex(all_services) -> None:
-    con = _connect()
+def test_hex(all_services, con) -> None:
     _run_statement(
         con,
         Statement(
@@ -940,8 +868,7 @@ def test_hex(all_services) -> None:
 
 
 """
-def test_initcap(all_services) -> None:
-    con = _connect()
+def test_initcap(all_services, con) -> None:
     _run_statement(
         con,
         Statement(
@@ -954,8 +881,7 @@ def test_initcap(all_services) -> None:
 """
 
 
-def test_insert_function(all_services) -> None:
-    con = _connect()
+def test_insert_function(all_services, con) -> None:
     _run_statement(
         con,
         Statement(
@@ -972,8 +898,7 @@ def test_insert_function(all_services) -> None:
     )
 
 
-def test_left(all_services) -> None:
-    con = _connect()
+def test_left(all_services, con) -> None:
     _run_statement(
         con,
         Statement(
@@ -983,8 +908,7 @@ def test_left(all_services) -> None:
     )
 
 
-def test_md5(all_services) -> None:
-    con = _connect()
+def test_md5(all_services, con) -> None:
     _run_statement(
         con,
         Statement(
@@ -1007,8 +931,7 @@ def test_md5(all_services) -> None:
 
 
 """' TODO
-def test_octet_length(all_services) -> None:
-    con = _connect()
+def test_octet_length(all_services, con) -> None:
     _run_statement(
         con,
         Statement(

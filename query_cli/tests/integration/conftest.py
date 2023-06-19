@@ -8,6 +8,7 @@ from typing import Tuple
 import psutil
 import pytest
 import requests
+import snowflake.connector
 
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -140,3 +141,22 @@ def all_services():
     procs_and_labels = p1 + p2 + p3 + p4
     yield procs_and_labels
     process_terminator(procs_and_labels)
+
+
+@pytest.fixture(scope="module")
+def con() -> snowflake.connector.SnowflakeConnection:
+    con = snowflake.connector.connect(
+        host="localhost",
+        port=7782,
+        protocol="http",
+        user="dude@sweet.com",
+        password="XXXX",
+        account="org123",
+        session_parameters={
+            "QUERY_TAG": "EndOfMonthFinancials",
+        },
+    )
+    try:
+        yield con
+    finally:
+        con.close()

@@ -167,9 +167,13 @@ def get_policy(name, org_id) -> None:
 
 @click.command()
 def setup_port_forwards() -> None:
-    processes = forward.create_forwards()
-    time.sleep(2)
-    input("Press Enter to terminate...")
+    processes = []
+    try:
+        processes = forward.create_forwards()
+        time.sleep(2)
+        input("Press Enter to terminate...")
+    except KeyboardInterrupt:
+        pass
     for process in processes:
         process.terminate()
 

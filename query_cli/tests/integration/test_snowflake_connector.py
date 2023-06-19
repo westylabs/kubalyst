@@ -150,7 +150,7 @@ def _run_statement(
                     ):
                         not_equal.append((i, result_field, expected_result_field))
                 if not_equal != []:
-                    assert False
+                    assert False, not_equal
     except snowflake.connector.errors.ProgrammingError as e:
         assert statement.error is not None, e
         assert e.errno == statement.error[0]
@@ -767,26 +767,21 @@ def test_base64_encode(all_services) -> None:
     _run_statement(
         con,
         Statement(
-            "INSERT INTO binary_table (v) VALUES ('HELP')",
+            "select 'HELP', TO_BINARY('HELP', 'UTF-8'), BASE64_ENCODE(TO_BINARY('HELP', 'UTF-8'))",
+            expected_result=[["HELP", b"HELP", "SEVMUA=="]],
         ),
     )
     _run_statement(
         con,
         Statement(
-            "UPDATE binary_table SET b = TO_BINARY(v, 'UTF-8');",
-        ),
-    )
-    _run_statement(
-        con,
-        Statement(
-            "UPDATE binary_table SET b64_string = BASE64_ENCODE(b);",
+            "INSERT INTO binary_table (v, b, b64_string) VALUES ('HELP', TO_BINARY('HELP', 'UTF-8'), BASE64_ENCODE(TO_BINARY('HELP', 'UTF-8')))",
         ),
     )
     _run_statement(
         con,
         Statement(
             "SELECT v, b, b64_string FROM binary_table;",
-            expected_result=[["HELP", "48454C50", "SEVMUA=="]],
+            expected_result=[["HELP", b"HELP", "SEVMUA=="]],
         ),
     )
 
@@ -873,3 +868,152 @@ def test_contains(all_services) -> None:
             expected_result=[[True, False]],
         ),
     )
+
+
+def test_div0(all_services) -> None:
+    con = _connect()
+    _run_statement(
+        con,
+        Statement(
+            "select div0(1, 2), div0(1, 0);",
+            expected_result=[[0.5, 0]],
+        ),
+    )
+    _run_statement(
+        con,
+        Statement(
+            "select div0(1, 2), div0(1, 0), div0(1, NULL);",
+            expected_result=[[0.5, 0, None]],
+        ),
+    )
+
+
+def test_editdistance(all_services) -> None:
+    con = _connect()
+    _run_statement(
+        con,
+        Statement(
+            "select editdistance('Gute nacht', 'Ich weis nicht'), editdistance('Gute nacht', 'Ich weis nicht', 3)",
+            expected_result=[[8, 3]],
+        ),
+    )
+
+
+def test_endswith(all_services) -> None:
+    con = _connect()
+    _run_statement(
+        con,
+        Statement(
+            "select endswith('banana', 'nana'), endswith('banana', 'an')",
+            expected_result=[[True, False]],
+        ),
+    )
+
+
+def test_exp(all_services) -> None:
+    con = _connect()
+    _run_statement(
+        con,
+        Statement(
+            "SELECT EXP(1), EXP(LN(10));",
+            expected_result=[[2.718281828459045, 10.000000000000002]],
+        ),
+    )
+
+
+def test_hex(all_services) -> None:
+    con = _connect()
+    _run_statement(
+        con,
+        Statement(
+            "SELECT 'HELLO', HEX_ENCODE('HELLO'), HEX_DECODE_BINARY(HEX_ENCODE('HELLO'));",
+            expected_result=[["HELLO", "48454C4C4F", b"HELLO"]],
+        ),
+    )
+    _run_statement(
+        con,
+        Statement(
+            "SELECT HEX_DECODE_STRING('536E6F77666C616B65');",
+            expected_result=[["Snowflake"]],
+        ),
+    )
+
+
+"""
+def test_initcap(all_services) -> None:
+    con = _connect()
+    _run_statement(
+        con,
+        Statement(
+            "SELECT initcap('The Quick Gray Fox'), initcap('the sky is blue'), initcap('OVER the River 2 times')",
+            expected_result=[
+                ["The Quick Gray Fox", "The Sky Is Blue", "Over The River 2 Times"]
+            ],
+        ),
+    )
+"""
+
+
+def test_insert_function(all_services) -> None:
+    con = _connect()
+    _run_statement(
+        con,
+        Statement(
+            "SELECT INSERT('abc', 1, 2, 'Z'), INSERT('abcdef', 3, 2, 'zzz'), INSERT('abc', 2, 1, '');",
+            expected_result=[["Zc", "abzzzef", "ac"]],
+        ),
+    )
+    _run_statement(
+        con,
+        Statement(
+            "SELECT INSERT('abc', 4, 0, 'Z'), INSERT(NULL, 1, 2, 'Z'), INSERT('abc', NULL, 2, 'Z'), INSERT('abc', 1, NULL, 'Z'), INSERT('abc', 1, 2, NULL);",
+            expected_result=[["abcZ", None, None, None, None]],
+        ),
+    )
+
+
+def test_left(all_services) -> None:
+    con = _connect()
+    _run_statement(
+        con,
+        Statement(
+            "SELECT LEFT('ABCDEF', 3);",
+            expected_result=[["ABC"]],
+        ),
+    )
+
+
+def test_md5(all_services) -> None:
+    con = _connect()
+    _run_statement(
+        con,
+        Statement(
+            "SELECT md5('Snowflake'), md5_binary('Snowflake')",
+            expected_result=[
+                [
+                    "edf1439075a83a447fb8b630ddc9c8de",
+                    b"\xed\xf1C\x90u\xa8:D\x7f\xb8\xb60\xdd\xc9\xc8\xde",
+                ]
+            ],
+        ),
+    )
+    _run_statement(
+        con,
+        Statement(
+            "SELECT md5_number_lower64('Snowflake'), md5_number_upper64('Snowflake')",
+            expected_result=[[9203306159527282910, 17145559544104499780]],
+        ),
+    )
+
+
+"""' TODO
+def test_octet_length(all_services) -> None:
+    con = _connect()
+    _run_statement(
+        con,
+        Statement(
+            "SELECT OCTET_LENGTH('abc'), OCTET_LENGTH('\u0392'), OCTET_LENGTH(X'A1B2');",
+            expected_result=[[3, 2, 2]],
+        ),
+    )
+"""

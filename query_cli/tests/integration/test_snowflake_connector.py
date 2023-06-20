@@ -104,6 +104,15 @@ def _run_test(
         _run_statement(con, statement)
 
 
+def _simple_select_test(
+    con: snowflake.connector.SnowflakeConnection, select_stmt: str, expected: Any
+) -> None:
+    _run_statement(
+        con,
+        Statement(select_stmt, expected_result=[[expected]]),
+    )
+
+
 def _standard_setup(con: snowflake.connector.SnowflakeConnection) -> None:
     _run_statement(
         con,
@@ -791,6 +800,13 @@ def test_charindex(all_services, con) -> None:
             expected_result=[[1, 2, 4]],
         ),
     )
+    _run_statement(
+        con,
+        Statement(
+            "select charindex('nope', 'banana'), charindex('nope', 'banana', 1), charindex('nope', 'banana', 3);",
+            expected_result=[[0, 0, 0]],
+        ),
+    )
 
 
 def test_contains(all_services, con) -> None:
@@ -939,4 +955,107 @@ def test_octet_length(all_services, con) -> None:
             expected_result=[[3, 2, 2]],
         ),
     )
+"""
+
+
+def test_position(all_services, con) -> None:
+    _run_statement(
+        con,
+        Statement(
+            "SELECT position('an', 'banana'), position('an' IN 'banana');",
+            expected_result=[[2, 2]],
+        ),
+    )
+
+
+"""
+def test_regexp_extract_all(all_services, con) -> None:
+    _run_statement(
+        con,
+        Statement(
+            "SELECT regexp_substr_all('a1_a2a3_a4A5a6', 'a[[:digit:]]')",
+            expected_result=[[["a1", "a2", "a3", "a4", "a6"]]]
+        )
+    )
+    _run_statement(
+        con,
+        Statement(
+            "SELECT regexp_substr_all('a1_a2a3_a4A5a6', 'a[[:digit:]]', 2)",
+            expected_result=[[["a2", "a3", "a4", "a6"]]]
+        )
+    )
+    _run_statement(
+        con,
+        Statement(
+            "SELECT regexp_substr_all('a1_a2a3_a4A5a6', 'a[[:digit:]]', 1, 3)",
+            expected_result=[[["a3", "a4", "a6"]]]
+        )
+    )
+"""
+
+
+def test_regexp_instr(all_services, con) -> None:
+    _run_statement(
+        con,
+        Statement(
+            "SELECT "
+            "  regexp_instr('nevermore1, nevermore2, nevermore3', 'nevermore\\d'),"
+            "  regexp_instr('nevermore1, nevermore2, nevermore3', 'nevermore\\d', 5),"
+            "  regexp_instr('nevermore1, nevermore2, nevermore3', 'nevermore\\d', 1, 3),"
+            "  regexp_instr('nevermore1, nevermore2, nevermore3', 'nevermore\\d', 1, 4)",
+            expected_result=[[1, 13, 25, 0]],
+        ),
+    )
+
+
+def test_regexp_like(all_services, con) -> None:
+    _run_statement(
+        con,
+        Statement(
+            "SELECT "
+            "  regexp_like('San Francisco', 'San.*'),"
+            "  regexp_like('Los Angeles', 'San.*')",
+            expected_result=[[True, False]],
+        ),
+    )
+
+
+def test_regexp_replace(all_services, con) -> None:
+    _run_statement(
+        con,
+        Statement(
+            "SELECT "
+            "  regexp_replace('It was the best of times, it was the worst of times', '( ){1,}',''),",
+            expected_result=[
+                [
+                    "Itwasthebestoftimes,itwastheworstoftimes",
+                ]
+            ],
+        ),
+    )
+
+
+def test_repeat(all_services, con) -> None:
+    _simple_select_test(con, "SELECT REPEAT('xy', 5);", "xyxyxyxyxy")
+
+
+def test_right(all_services, con) -> None:
+    _simple_select_test(con, "SELECT RIGHT('ABCDEFG', 3);", "EFG")
+
+
+def test_rtrimmed_right(all_services, con) -> None:
+    _simple_select_test(con, "SELECT RTRIMMED_LENGTH(' ABCD ')", 5)
+
+
+def test_space(all_services, con) -> None:
+    _simple_select_test(con, "SELECT space(4)", "    ")
+
+
+"""
+def test_strtok(all_services, con) -> None:
+    _simple_select_test(con, "select STRTOK('user@snowflakezcom', '@z', 1);", "user")
+    _simple_select_test(
+        con, "select STRTOK('user@snowflakezcom', '@z', 2);", "snowflake"
+    )
+    _simple_select_test(con, "select STRTOK('user@snowflakezcom', '@z', 3);", "com")
 """

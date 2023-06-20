@@ -685,7 +685,6 @@ insert into xyz_table(id, obj) select 1, parse_json($${
 
 def test_ascii(all_services, con) -> None:
     _standard_setup(con)
-    """ https://github.com/conduyt/core/issues/26
     _run_statement(
         con,
         Statement(
@@ -697,10 +696,9 @@ def test_ascii(all_services, con) -> None:
                 ["bcd", 98],
                 ["", 0],
                 [None, None],
-            ]
-        )
+            ],
+        ),
     )
-    """
 
 
 def test_base64_encode(all_services, con) -> None:

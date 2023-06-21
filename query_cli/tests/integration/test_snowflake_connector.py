@@ -753,23 +753,20 @@ def test_bit_length(all_services, con) -> None:
     _run_statement(
         con,
         Statement(
-            "INSERT INTO bl (v, b) VALUES ('abc', NULL), ('\\u0394', X'A1B2');",
+            "INSERT INTO bl (v, b) VALUES ('abc', NULL), (NULL, X'A1B2');",
         ),
     )
 
-
-"""
     _run_statement(
         con,
         Statement(
             "SELECT v, b, BIT_LENGTH(v), BIT_LENGTH(b) FROM bl ORDER BY v;",
             expected_result=[
                 ["abc", None, 24, None],
-                ["Δ", "A1B2", 16, 16],
+                [None, bytearray(b"\xa1\xb2"), None, 16],
             ],
         ),
     )
-"""
 
 
 def test_chr(all_services, con) -> None:
@@ -944,16 +941,9 @@ def test_md5(all_services, con) -> None:
     )
 
 
-"""' TODO
 def test_octet_length(all_services, con) -> None:
-    _run_statement(
-        con,
-        Statement(
-            "SELECT OCTET_LENGTH('abc'), OCTET_LENGTH('\u0392'), OCTET_LENGTH(X'A1B2');",
-            expected_result=[[3, 2, 2]],
-        ),
-    )
-"""
+    _simple_select_test(con, "select OCTET_LENGTH('abc')", 3)
+    _simple_select_test(con, "select OCTET_LENGTH(X'A1B2')", 2)
 
 
 def test_position(all_services, con) -> None:

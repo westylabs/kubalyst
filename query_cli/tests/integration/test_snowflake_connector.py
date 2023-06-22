@@ -113,6 +113,15 @@ def _simple_select_test(
     )
 
 
+def _simple_select_test_multi(
+    con: snowflake.connector.SnowflakeConnection, select_stmt: str, expected: List[Any]
+) -> None:
+    _run_statement(
+        con,
+        Statement(select_stmt, expected_result=[expected]),
+    )
+
+
 def _standard_setup(con: snowflake.connector.SnowflakeConnection) -> None:
     _run_statement(
         con,
@@ -588,19 +597,19 @@ def test_table_variant(all_services, con) -> None:
         Statement(
             "select n, v, typeof(v) from vartab order by n;",
             expected_result=[
-                [1, "null", ANY_VALUE],
-                [2, None, ANY_VALUE],
-                [3, "true", ANY_VALUE],
-                [4, "-17", ANY_VALUE],
-                [5, "123.12", ANY_VALUE],
-                [6, "191.2", ANY_VALUE],
-                [7, '"Om ara pa ca na dhih"', ANY_VALUE],
+                [1, "null", "NULL_VALUE"],
+                [2, None, None],
+                [3, "true", "BOOLEAN"],
+                [4, "-17", "INTEGER"],
+                [5, "123.12", "DECIMAL"],
+                [6, "191.2", "DECIMAL"],  # Snowflake returns DOUBLE here
+                [7, '"Om ara pa ca na dhih"', "VARCHAR"],
                 [
                     8,
-                    "[-1,12,289,2188,false]",
-                    ANY_VALUE,
+                    "[\n  -1,\n  12,\n  289,\n  2188,\n  false\n]",
+                    "ARRAY",
                 ],
-                [9, '{"x":"abc","y":false,"z":10}', ANY_VALUE],
+                [9, '{\n  "x": "abc",\n  "y": false,\n  "z": 10\n}', "OBJECT"],
             ],
         ),
     )
@@ -678,7 +687,7 @@ insert into xyz_table(id, obj) select 1, parse_json($${
         con,
         Statement(
             "select obj:country from xyz_table",
-            expected_result=[['{"code":"US","name":"United States"}']],
+            expected_result=[['{\n  "code": "US",\n  "name": "United States"\n}']],
         ),
     )
 
@@ -1047,3 +1056,12 @@ def test_strtok(all_services, con) -> None:
     )
     _simple_select_test(con, "select STRTOK('user@snowflakezcom', '@z', 3);", "com")
 """
+
+
+def test_typeof(all_services, con) -> None:
+    _simple_select_test_multi(con, "SELECT 1, typeof(1)", [1, "INTEGER"])
+    _simple_select_test_multi(
+        con, "SELECT 1.1, typeof(1.1)", [Decimal("1.1"), "DECIMAL"]
+    )
+    _simple_select_test_multi(con, "SELECT 'foo', typeof('foo')", ["foo", "VARCHAR"])
+    _simple_select_test_multi(con, "SELECT 1.1e2, typeof(1.1e2)", [110.0, "DOUBLE"])

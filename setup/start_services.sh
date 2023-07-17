@@ -30,11 +30,10 @@ kubectl apply -f ./trino-ranger-cfgs.yaml
 kubectl apply -f ./trino-ranger.yaml
 
 # Setup port forwards in a different terminal
-cd ../query_cli
 virtualenv venv
 . venv/bin/activate
 pip install -r requirements3.txt
-./query_cli setup-port-forwards
+query-cli setup-port-forwards
 # (leave this running and open a new terminal)
 
 # Setup hive bucket

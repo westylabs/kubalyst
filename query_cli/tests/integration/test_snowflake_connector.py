@@ -63,13 +63,15 @@ class Statement:
 def _render_not_equal(not_equal: list[tuple[int, Any, Any]]) -> str:
     lines = []
     for index, result, expected in not_equal:
-        lines.append(f"at {index}: got `{result}`, but expected `{expected}`")
+        lines.append(
+            f"at {index}: "
+            f"got `{result}` ({type(result).__name__}), "
+            f"but expected `{expected}` ({type(expected).__name__})"
+        )
     return "\n".join(lines)
 
 
-def _run_statement(
-    con: snowflake.connector.SnowflakeConnection, statement: Statement
-) -> None:
+def _run_statement(con, statement: Statement) -> None:
     try:
         cursor = con.cursor().execute(statement.sql_statement)
         if statement.expected_results is not None:
@@ -97,16 +99,12 @@ def _run_statement(
         assert statement.error[2] in e.msg
 
 
-def _run_test(
-    con: snowflake.connector.SnowflakeConnection, statements: List[Statement]
-) -> None:
+def _run_test(con, statements: List[Statement]) -> None:
     for statement in statements:
         _run_statement(con, statement)
 
 
-def _simple_select_test(
-    con: snowflake.connector.SnowflakeConnection, select_stmt: str, expected: Any
-) -> None:
+def _simple_select_test(con, select_stmt: str, expected: Any) -> None:
     _run_statement(
         con,
         Statement(select_stmt, expected_result=[[expected]]),
@@ -965,30 +963,28 @@ def test_position(all_services, con) -> None:
     )
 
 
-"""
 def test_regexp_extract_all(all_services, con) -> None:
     _run_statement(
         con,
         Statement(
             "SELECT regexp_substr_all('a1_a2a3_a4A5a6', 'a[[:digit:]]')",
-            expected_result=[[["a1", "a2", "a3", "a4", "a6"]]]
-        )
+            expected_result=[['[\n  "a1",\n  "a2",\n  "a3",\n  "a4",\n  "a6"\n]']],
+        ),
     )
     _run_statement(
         con,
         Statement(
             "SELECT regexp_substr_all('a1_a2a3_a4A5a6', 'a[[:digit:]]', 2)",
-            expected_result=[[["a2", "a3", "a4", "a6"]]]
-        )
+            expected_result=[['[\n  "a2",\n  "a3",\n  "a4",\n  "a6"\n]']],
+        ),
     )
     _run_statement(
         con,
         Statement(
             "SELECT regexp_substr_all('a1_a2a3_a4A5a6', 'a[[:digit:]]', 1, 3)",
-            expected_result=[[["a3", "a4", "a6"]]]
-        )
+            expected_result=[['[\n  "a3",\n  "a4",\n  "a6"\n]']],
+        ),
     )
-"""
 
 
 def test_regexp_instr(all_services, con) -> None:
@@ -1046,6 +1042,10 @@ def test_rtrimmed_right(all_services, con) -> None:
 
 def test_space(all_services, con) -> None:
     _simple_select_test(con, "SELECT space(4)", "    ")
+
+
+def test_array_construct(all_services, con) -> None:
+    _simple_select_test(con, "SELECT array_construct(1, 2, 3)", "[\n  1,\n  2,\n  3\n]")
 
 
 """

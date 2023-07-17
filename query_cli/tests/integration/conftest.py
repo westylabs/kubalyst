@@ -104,6 +104,10 @@ def _run_session() -> List[Tuple[Any, str]]:
     return [_run_service("session", 7783)]
 
 
+def _run_webui() -> List[Tuple[Any, str]]:
+    return [_run_service("webui", 7786)]
+
+
 @pytest.fixture(scope="session")
 def orgdata():
     procs_and_labels = _run_orgdata()
@@ -133,12 +137,20 @@ def session():
 
 
 @pytest.fixture(scope="session")
+def webui():
+    procs_and_labels = _run_webui()
+    yield procs_and_labels
+    process_terminator(procs_and_labels)
+
+
+@pytest.fixture(scope="session")
 def all_services():
     p1 = _run_orgdata()
     p2 = _run_query()
     p3 = _run_taskman()
     p4 = _run_session()
-    procs_and_labels = p1 + p2 + p3 + p4
+    p5 = _run_webui()
+    procs_and_labels = p1 + p2 + p3 + p4 + p5
     yield procs_and_labels
     process_terminator(procs_and_labels)
 

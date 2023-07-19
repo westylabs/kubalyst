@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sqlpad
+spec:
+  ports:
+  - protocol: TCP
+    port: 7787  
+    targetPort: 7787
+  selector:
+    app: sqlpad
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sqlpad
+spec:
+  selector:
+    matchLabels:
+      app: sqlpad
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: sqlpad
+    spec:
+      containers:
+      - name: sqlpad
+        image: gfee/sqlpad:latest
+        ports:
+        - containerPort: 7787
+        imagePullPolicy: Never
+        env:   
+          - name: SQLPAD_PORT
+            value: "7787"
+          - name: SQLPAD_ADMIN
+            value: "admin@sqlpad.com"
+          - name: SQLPAD_ADMIN_PASSWORD
+            value: "admin"
+          - name: SQLPAD_APP_LOG_LEVEL
+            value: 'debug'
+          - name: SQLPAD_WEB_LOG_LEVEL
+            value: 'warn'
+          - name: SQLPAD_CONNECTIONS__pgdemo__name
+            value: 'Postgres demo'
+          - name: SQLPAD_CONNECTIONS__pgdemo__driver
+            value: 'postgres'
+          - name: SQLPAD_CONNECTIONS__pgdemo__host
+            value: 'localhost'
+          - name: SQLPAD_CONNECTIONS__pgdemo__database
+            value: 'sqlpad'
+          - name: SQLPAD_CONNECTIONS__pgdemo__username
+            value: 'sqlpad'
+          - name: SQLPAD_CONNECTIONS__pgdemo__password
+            value: 'sqlpad'
+          - name: SQLPAD_CONNECTIONS__pgdemo__multiStatementTransactionEnabled
+            value: 'true'    
+          - name: SQLPAD_CONNECTIONS__pgdemo__idleTimeoutSeconds
+            value: '86400'   
+          - name: SQLPAD_CONNECTIONS__conduyt__name
+            value: 'Conduyt'
+          - name: SQLPAD_CONNECTIONS__conduyt__driver
+            value: 'conduyt'
+          - name: SQLPAD_CONNECTIONS__conduyt__host
+            value: 'host.docker.internal'
+          - name: SQLPAD_CONNECTIONS__conduyt__username
+            value: 'sqlpad'
+          - name: SQLPAD_CONNECTIONS__conduyt__multiStatementTransactionEnabled
+            value: 'true'    
+          - name: SQLPAD_CONNECTIONS__conduyt__idleTimeoutSeconds
+            value: '86400'                    

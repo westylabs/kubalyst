@@ -5,6 +5,7 @@ eval $(minikube -p minikube docker-env)
 cd hive-metastore-docker && ./build_image.sh && cd ..
 cd trino && ./build_image.sh && cd ..
 cd trino-ranger-demo/ranger-admin && ./build_image.sh && cd ../..
+cd ../sqlpad/ && ./build_image.sh
 
 # Set paths in yaml files to point to the current project root.
 # Otherwise they'll point to `/Users/gfee/code/collosus`

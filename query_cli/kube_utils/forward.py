@@ -72,6 +72,7 @@ def create_forwards() -> List[Any]:
     maria_process = _PortForward("mariadb", 3306)
     minio_process = _PortForward("minio", 9000)
     redis_process = _PortForward("redis", 6379)
+    sqlpad_process = _PortForward("sqlpad", 7787)
 
     return list(
         filter(
@@ -82,6 +83,7 @@ def create_forwards() -> List[Any]:
                 maria_process,
                 minio_process,
                 redis_process,
+                sqlpad_process,
             ],
         )
     )

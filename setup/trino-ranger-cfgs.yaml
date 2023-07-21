@@ -107,5 +107,5 @@ data:
   mysql.properties: |-
     connector.name=mysql
     connection-url=jdbc:mysql://mariadb:3306
-    connection-user=admin
+    connection-user=root
     connection-password=admin

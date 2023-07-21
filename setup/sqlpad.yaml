@@ -66,6 +66,8 @@ spec:
             value: 'host.docker.internal'
           - name: SQLPAD_CONNECTIONS__conduyt__username
             value: 'sqlpad'
+          - name: SQLPAD_CONNECTIONS__conduyt__catalog
+            value: 'TESTDB1'            
           - name: SQLPAD_CONNECTIONS__conduyt__multiStatementTransactionEnabled
             value: 'true'    
           - name: SQLPAD_CONNECTIONS__conduyt__idleTimeoutSeconds

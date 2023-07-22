@@ -34,6 +34,8 @@ spec:
         env:   
           - name: SQLPAD_PORT
             value: "7787"
+          - name: SQLPAD_BASE_URL
+            value: "/ui/v1"
           - name: SQLPAD_ADMIN
             value: "admin@sqlpad.com"
           - name: SQLPAD_ADMIN_PASSWORD
@@ -42,6 +44,12 @@ spec:
             value: 'debug'
           - name: SQLPAD_WEB_LOG_LEVEL
             value: 'warn'
+          - name: SQLPAD_AUTH_PROXY_ENABLED
+            value: 'true'
+          - name: SQLPAD_AUTH_PROXY_AUTO_SIGN_UP
+            value: 'true'
+          - name: SQLPAD_AUTH_PROXY_HEADERS
+            value: 'email:X-WEBAUTH-EMAIL role:X-WEBAUTH-ROLE data.sessionId:X-WEBAUTH-SESSION-ID'
           - name: SQLPAD_CONNECTIONS__pgdemo__name
             value: 'Postgres demo'
           - name: SQLPAD_CONNECTIONS__pgdemo__driver
@@ -66,6 +74,10 @@ spec:
             value: 'host.docker.internal'
           - name: SQLPAD_CONNECTIONS__conduyt__username
             value: 'sqlpad'
+          - name: SQLPAD_CONNECTIONS__conduyt__useremail
+            value: '{{user.email}}'  
+          - name: SQLPAD_CONNECTIONS__conduyt__sessionId
+            value: '{{user.data.sessionId}}'          
           - name: SQLPAD_CONNECTIONS__conduyt__catalog
             value: 'TESTDB1'            
           - name: SQLPAD_CONNECTIONS__conduyt__multiStatementTransactionEnabled

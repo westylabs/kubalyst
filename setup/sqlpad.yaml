@@ -50,22 +50,6 @@ spec:
             value: 'true'
           - name: SQLPAD_AUTH_PROXY_HEADERS
             value: 'email:X-WEBAUTH-EMAIL role:X-WEBAUTH-ROLE data.sessionId:X-WEBAUTH-SESSION-ID'
-          - name: SQLPAD_CONNECTIONS__pgdemo__name
-            value: 'Postgres demo'
-          - name: SQLPAD_CONNECTIONS__pgdemo__driver
-            value: 'postgres'
-          - name: SQLPAD_CONNECTIONS__pgdemo__host
-            value: 'localhost'
-          - name: SQLPAD_CONNECTIONS__pgdemo__database
-            value: 'sqlpad'
-          - name: SQLPAD_CONNECTIONS__pgdemo__username
-            value: 'sqlpad'
-          - name: SQLPAD_CONNECTIONS__pgdemo__password
-            value: 'sqlpad'
-          - name: SQLPAD_CONNECTIONS__pgdemo__multiStatementTransactionEnabled
-            value: 'true'    
-          - name: SQLPAD_CONNECTIONS__pgdemo__idleTimeoutSeconds
-            value: '86400'   
           - name: SQLPAD_CONNECTIONS__conduyt__name
             value: 'Conduyt'
           - name: SQLPAD_CONNECTIONS__conduyt__driver
@@ -77,9 +61,7 @@ spec:
           - name: SQLPAD_CONNECTIONS__conduyt__useremail
             value: '{{user.email}}'  
           - name: SQLPAD_CONNECTIONS__conduyt__sessionId
-            value: '{{user.data.sessionId}}'          
-          - name: SQLPAD_CONNECTIONS__conduyt__catalog
-            value: 'TESTDB1'            
+            value: '{{user.data.sessionId}}'                     
           - name: SQLPAD_CONNECTIONS__conduyt__multiStatementTransactionEnabled
             value: 'true'    
           - name: SQLPAD_CONNECTIONS__conduyt__idleTimeoutSeconds

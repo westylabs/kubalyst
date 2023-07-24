@@ -1065,3 +1065,63 @@ def test_typeof(all_services, con) -> None:
     )
     _simple_select_test_multi(con, "SELECT 'foo', typeof('foo')", ["foo", "VARCHAR"])
     _simple_select_test_multi(con, "SELECT 1.1e2, typeof(1.1e2)", [110.0, "DOUBLE"])
+
+
+def test_union_all(all_services, con) -> None:
+    _standard_setup(con)
+    _run_statement(
+        con,
+        Statement(
+            "CREATE OR REPLACE TABLE left_union (v VARCHAR, b BINARY, b64_string VARCHAR);",
+        ),
+    )
+    _run_statement(
+        con,
+        Statement(
+            "create or replace database testotherdb",
+        ),
+    )
+    _run_statement(
+        con,
+        Statement(
+            "use database testotherdb",
+            expected_result=[["Statement executed successfully."]],
+        ),
+    )
+    _run_statement(
+        con,
+        Statement(
+            "create schema if not exists test2",
+        ),
+    )
+    _run_statement(
+        con,
+        Statement(
+            "use schema test2",
+            expected_result=[["Statement executed successfully."]],
+        ),
+    )
+    _run_statement(
+        con,
+        Statement(
+            "CREATE OR REPLACE TABLE right_union (v2 VARCHAR, b2 BINARY, b64_string2 VARCHAR);",
+        ),
+    )
+    _run_statement(
+        con,
+        Statement(
+            "select table_catalog, table_schema, table_name, column_name, data_type "
+            "from testdb.information_schema.columns where table_name = 'LEFT_UNION' "
+            "UNION ALL select table_catalog, table_schema, table_name, column_name, data_type "
+            "from testotherdb.information_schema.columns where table_name = 'RIGHT_UNION' "
+            "ORDER BY table_catalog, table_schema, table_name",
+            expected_result=[
+                ["TESTDB", "TEST1", "LEFT_UNION", "v", "VARCHAR"],
+                ["TESTDB", "TEST1", "LEFT_UNION", "b", "BINARY"],
+                ["TESTDB", "TEST1", "LEFT_UNION", "b64_string", "VARCHAR"],
+                ["TESTOTHERDB", "TEST2", "RIGHT_UNION", "v2", "VARCHAR"],
+                ["TESTOTHERDB", "TEST2", "RIGHT_UNION", "b2", "BINARY"],
+                ["TESTOTHERDB", "TEST2", "RIGHT_UNION", "b64_string2", "VARCHAR"],
+            ],
+        ),
+    )

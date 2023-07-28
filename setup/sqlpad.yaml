@@ -50,6 +50,10 @@ spec:
             value: 'true'
           - name: SQLPAD_AUTH_PROXY_HEADERS
             value: 'email:X-WEBAUTH-EMAIL role:X-WEBAUTH-ROLE data.sessionId:X-WEBAUTH-SESSION-ID'
+          - name: SQLPAD_WEBHOOK_ENABLED
+            value: 'true'
+          - name: SQLPAD_WEBHOOK_SIGNOUT_URL
+            value: 'http://host.docker.internal:7786/api/v1/signout-hook'
           - name: SQLPAD_CONNECTIONS__conduyt__name
             value: 'Conduyt'
           - name: SQLPAD_CONNECTIONS__conduyt__driver

@@ -93,7 +93,7 @@ def create_role(
 
 
 def get_all_roles() -> List[str]:
-    return [entry["name"] for entry in ranger_service.get_roles().values()]
+    return [entry["name"] for entry in ranger_service.get_roles()]
 
 
 def get_roles(org_id: str) -> List[str]:

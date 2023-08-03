@@ -1,6 +1,7 @@
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Optional
 
 import requests
 from requests.auth import HTTPBasicAuth
@@ -8,7 +9,7 @@ from requests.auth import HTTPBasicAuth
 RANGER_ADMIN_URL = "http://localhost:6080/"
 
 
-def get_roles() -> Dict[str, Any]:
+def get_roles() -> List[Dict[str, Any]]:
     r = requests.get(
         url="{}service/public/v2/api/roles".format(RANGER_ADMIN_URL),
         auth=HTTPBasicAuth("admin", "Rangeradmin1"),
@@ -17,6 +18,7 @@ def get_roles() -> Dict[str, Any]:
         print("status code = {}".format(r.status_code))
         print(r.text)
         raise ValueError("Nope")
+
     return r.json()
 
 
@@ -73,7 +75,9 @@ def get_users(org_id: str) -> List[str]:
     ]
 
 
-def _create_user_worker(url: str, user_config: Dict[str, Any]) -> Dict[str, Any]:
+def _create_user_worker(
+    url: str, user_config: Dict[str, Any]
+) -> Optional[List[Dict[str, Any]]]:
     r = requests.post(
         url="{}{}".format(RANGER_ADMIN_URL, url),
         auth=HTTPBasicAuth("admin", "Rangeradmin1"),
@@ -87,13 +91,12 @@ def _create_user_worker(url: str, user_config: Dict[str, Any]) -> Dict[str, Any]
     if r.status_code != 200:
         print("status code = {}".format(r.status_code))
         print(r.text)
-        raise ValueError("Nope")
+        return None
     return r.json()
 
 
-def create_user(user_config: Dict[str, Any]) -> Dict[str, Any]:
-    # _create_user_worker("service/users", user_config)
-    return _create_user_worker("service/xusers/users", user_config)
+def create_user(user_config: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
+    return _create_user_worker("service/users", user_config)
 
 
 def get_policy(id: str) -> Dict[str, Any]:

@@ -18,6 +18,7 @@ SYSADMIN_CONFIG_TEMPLATE: Dict[str, Any] = {
     "publicScreenName": "{} Sysadmin",
     "notes": "Sysdamin for {}",
     "userSource": 0,
+    "description": "",  # Cannot be NULL
 }
 
 

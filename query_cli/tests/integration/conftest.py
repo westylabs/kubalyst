@@ -10,6 +10,9 @@ import pytest
 import requests
 import snowflake.connector
 
+from query_cli.orgdata import service as orgdata_service
+from query_cli.orgdata.entities import CreateOrgModel
+
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 DEBUG = False
@@ -97,7 +100,7 @@ def _run_taskman() -> List[Tuple[Any, str]]:
         cwd=os.path.join(SCRIPT_DIR, "../../../taskman/"),
         shell=True,
     )
-    return [p_tuple, (p2, "taskman_worker")]
+    return [p_tuple, (p2, "taskman-worker")]
 
 
 def _run_session() -> List[Tuple[Any, str]]:
@@ -155,8 +158,21 @@ def all_services():
     process_terminator(procs_and_labels)
 
 
+@pytest.fixture(scope="session")
+def org_created(orgdata) -> None:
+    print("creating org")
+    orgdata_service.create_org(
+        CreateOrgModel(
+            org_name="org123",
+            user_name="sweet dude",
+            user_email="dude@sweet.com",
+            user_password="XXXX",
+        )
+    )
+
+
 @pytest.fixture(scope="module")
-def con() -> snowflake.connector.SnowflakeConnection:
+def con(org_created) -> snowflake.connector.SnowflakeConnection:
     con = snowflake.connector.connect(
         host="localhost",
         port=7782,

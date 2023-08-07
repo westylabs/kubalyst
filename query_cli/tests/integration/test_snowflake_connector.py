@@ -26,6 +26,14 @@ def test_basic_ddl(all_services, con):
     con.cursor().execute("use database testdb1")
     con.cursor().execute("create or replace schema test2")
 
+    # This call currently crashes the query service
+    # The last valid conduyt stack in the traceback is:
+    #   File "/Users/jmackay/code/conduyt/core/query/commands/data.py", line 141, in _base64_encode_worker
+    results = con.cursor().execute("show databases")
+    
+    # Test currently returns lots of databases bc we create dupes, skip validating count for now
+    # assert len(list(filter(lambda result: result[0] == "testdb1", results))) == 1
+
 
 def test_basic_fetchall(all_services, con):
     result = con.cursor().execute("create or replace database testdb1").fetchall()

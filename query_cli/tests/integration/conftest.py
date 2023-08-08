@@ -1,7 +1,9 @@
 import os
+import signal
 import subprocess
 import time
 from typing import Any
+from typing import Callable
 from typing import List
 from typing import Tuple
 
@@ -23,7 +25,20 @@ def _debug(msg):
         print(msg)
 
 
-def process_terminator(procs_and_labels: List[Tuple[Any, str]]):
+PROCESS_HANDLER = Callable[[psutil.Process], None]
+
+
+def kill(process: psutil.Process) -> None:
+    process.kill()
+
+
+def sigint(process: psutil.Process) -> None:
+    process.send_signal(signal.SIGINT)
+
+
+def _process_processor(
+    procs_and_labels: List[Tuple[Any, str]], handler: PROCESS_HANDLER
+):
     for proc, label in procs_and_labels:
         _debug("Terminating {}".format(label))
         if proc is None:
@@ -34,14 +49,30 @@ def process_terminator(procs_and_labels: List[Tuple[Any, str]]):
                 recursive=True
             ):  # or parent.children() for recursive=False
                 _debug("killing child")
-                child.kill()
+                handler(child)
             _debug("killing parent")
-            parent.kill()
+            handler(parent)
         except Exception as e:
             # No matter what we want to try the next one
             _debug("Something went weird terminating {}".format(label))
             _debug(e)
             pass
+
+
+class TestState:
+    def __init__(self) -> None:
+        self._processes_to_kill: List[Tuple[Any, str]] = []
+        self._processes_to_signal: List[Tuple[Any, str]] = []
+
+    def add_kill(self, pid_label: Tuple[Any, str]) -> None:
+        self._processes_to_kill.append(pid_label)
+
+    def add_signal(self, pid: Any, label: str) -> None:
+        self._processes_to_signal.append((pid, label))
+
+    def cleanup(self):
+        _process_processor(self._processes_to_kill, kill)
+        _process_processor(self._processes_to_signal, sigint)
 
 
 def check_for_healthy(label: str, port: int) -> bool:
@@ -85,77 +116,82 @@ def _run_service(dir_name, port_num) -> Tuple[Any, str]:
         return None, dir_name
 
 
-def _run_orgdata() -> List[Tuple[Any, str]]:
-    return [_run_service("orgdata", 7784)]
+def _run_orgdata(state: TestState) -> None:
+    state.add_kill(_run_service("orgdata", 7784))
 
 
-def _run_query() -> List[Tuple[Any, str]]:
-    return [_run_service("query", 7782)]
+def _run_query(state: TestState) -> None:
+    state.add_kill(_run_service("query", 7782))
 
 
-def _run_taskman() -> List[Tuple[Any, str]]:
-    p_tuple = _run_service("taskman", 7785)
+def _run_taskman(state: TestState):
+    state.add_kill(_run_service("taskman", 7785))
     p2 = subprocess.Popen(
         "taskman_worker",
-        cwd=os.path.join(SCRIPT_DIR, "../../../taskman/"),
+        cwd=os.path.join(SCRIPT_DIR, "../../../"),
         shell=True,
     )
-    return [p_tuple, (p2, "taskman-worker")]
+    state.add_signal(p2, "taskman-worker")
 
 
-def _run_session() -> List[Tuple[Any, str]]:
-    return [_run_service("session", 7783)]
+def _run_session(state: TestState) -> None:
+    state.add_kill(_run_service("session", 7783))
 
 
-def _run_webui() -> List[Tuple[Any, str]]:
-    return [_run_service("webui", 7786)]
+def _run_webui(state: TestState) -> None:
+    state.add_kill(_run_service("webui", 7786))
 
 
 @pytest.fixture(scope="session")
 def orgdata():
-    procs_and_labels = _run_orgdata()
-    yield procs_and_labels
-    process_terminator(procs_and_labels)
+    state = TestState()
+    _run_orgdata(state)
+    yield state
+    state.cleanup()
 
 
 @pytest.fixture(scope="session")
 def query():
-    procs_and_labels = _run_query()
-    yield procs_and_labels
-    process_terminator(procs_and_labels)
+    state = TestState()
+    _run_query(state)
+    yield state
+    state.cleanup()
 
 
 @pytest.fixture(scope="session")
 def taskman():
-    procs_and_labels = _run_taskman()
-    yield procs_and_labels
-    process_terminator(procs_and_labels)
+    state = TestState()
+    _run_taskman(state)
+    yield state
+    state.cleanup()
 
 
 @pytest.fixture(scope="session")
 def session():
-    procs_and_labels = _run_session()
-    yield procs_and_labels
-    process_terminator(procs_and_labels)
+    state = TestState()
+    _run_session(state)
+    yield state
+    state.cleanup()
 
 
 @pytest.fixture(scope="session")
 def webui():
-    procs_and_labels = _run_webui()
-    yield procs_and_labels
-    process_terminator(procs_and_labels)
+    state = TestState()
+    _run_webui(state)
+    yield state
+    state.cleanup()
 
 
 @pytest.fixture(scope="session")
 def all_services():
-    p1 = _run_orgdata()
-    p2 = _run_query()
-    p3 = _run_taskman()
-    p4 = _run_session()
-    p5 = _run_webui()
-    procs_and_labels = p1 + p2 + p3 + p4 + p5
-    yield procs_and_labels
-    process_terminator(procs_and_labels)
+    state = TestState()
+    _run_orgdata(state)
+    _run_query(state)
+    _run_taskman(state)
+    _run_session(state)
+    _run_webui(state)
+    yield state
+    state.cleanup()
 
 
 @pytest.fixture(scope="session")

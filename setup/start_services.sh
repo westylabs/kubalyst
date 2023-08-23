@@ -1,19 +1,24 @@
-minikube start --memory 16000 --cpus 8 --disk-size 80g --driver docker
+# fetch remote submodules
+git submodule update --init --recursive
+git submodule update --remote
 
 # build images
 eval $(minikube -p minikube docker-env)
-cd hive-metastore-docker && ./build_image.sh && cd ..
-cd trino && ./build_image.sh && cd ..
-cd trino-ranger-demo/ranger-admin && ./build_image.sh && cd ../..
-cd ../sqlpad/ && ./build_image.sh && cd ../setup
+(cd hive-metastore-docker && ./build_image.sh)
+(cd trino && ./build_image.sh)
+(cd trino-ranger-demo/ranger-admin && ./build_image.sh)
+(cd ../sqlpad/ && ./build_image.sh)
 
-# Set paths in yaml files to point to the current project root.
-# Otherwise they'll point to `/Users/gfee/code/collosus`
+# Set paths in yaml files to point to the current users project root
 ./fix-k8s-paths.py *.yaml
 
+### Start k8s mini cluster
+# on a laptop memory and cpu might need to be reduced
+minikube start --memory 16000 --cpus 8 --disk-size 80g --driver docker
+
 ### Minio Setup
-kubectl apply -f ./minio_dev.yaml
 # create bucket
+kubectl apply -f ./minio_dev.yaml
 
 ### Metastore setup
 # maria for the db
@@ -37,7 +42,7 @@ kubectl apply -f ./redis.yaml
 kubectl apply -f ./sqlpad.yaml
 
 # Setup port forwards in a different terminal
-virtualenv venv
+virtualenv -p 3.9.6 venv
 . venv/bin/activate
 pip install -r requirements.txt
 pip install -e .

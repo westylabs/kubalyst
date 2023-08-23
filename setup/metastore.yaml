@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
       - name: hive-metastore
-        image: gfee/hive-metastore
+        image: @REPO_NAME@/hive-metastore
         env:
         - name: AWS_ACCESS_KEY_ID
           value: minio_root_user

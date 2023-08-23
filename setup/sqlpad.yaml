@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
       - name: sqlpad
-        image: gfee/sqlpad:latest
+        image: @REPO_NAME@/sqlpad:latest
         ports:
         - containerPort: 7787
         imagePullPolicy: Never

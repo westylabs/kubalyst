@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
       - name: ranger-admin
-        image: gfee/ranger-admin
+        image: @REPO_NAME@/ranger-admin
         ports:
         - containerPort: 6080
           name: ranger-admin

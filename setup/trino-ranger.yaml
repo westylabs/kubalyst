@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
       - name: trino
-        image: gfee/trino-ranger
+        image: @REPO_NAME@/trino-ranger
         ports:
         - containerPort: 8080
         env:
@@ -72,7 +72,7 @@ spec:
         fsGroup: 1000
       containers:
       - name: trino
-        image: gfee/trino-ranger
+        image: @REPO_NAME@/trino-ranger
         ports:
         - containerPort: 8080
         env:

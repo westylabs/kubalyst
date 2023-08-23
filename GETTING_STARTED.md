@@ -25,6 +25,9 @@
     ```
   - OSX
     - Enable Kubernetes on Docker desktop
+    ```bash
+    brew install minikube
+    ```
 - Install python 3.9.5
 - Install rust (brew install rust)
   - Ubuntu
@@ -60,7 +63,7 @@
     ```
   - OSX
     ```bash
-    brew install aws-cli
+    brew install awscli
     ```
 - Configure aws-cli credentials
   - Create the file `~/.aws/credentials` and make its contents:
@@ -69,4 +72,4 @@
     aws_access_key_id = minio_root_user
     aws_secret_access_key = minio_root_password123
     ```
-- Start running the commands in setup/start_services.sh one by one
+- Start running the commands in `setup/start_services.sh` one by one

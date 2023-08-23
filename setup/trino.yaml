@@ -79,7 +79,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/Users/gregfee/code/colossus/mnt/trino"
+    path: "@PROJECT_ROOT@/mnt/trino"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

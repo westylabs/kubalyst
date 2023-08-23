@@ -58,5 +58,5 @@ spec:
         # This volume is based on PVC
         hostPath:
           # Ensure the file directory is created.
-          path: /Users/gregfee/code/colossus/mnt/minio-data
+          path: @PROJECT_ROOT@/mnt/minio-data
           type: DirectoryOrCreate

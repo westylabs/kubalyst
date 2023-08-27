@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-import re
 import sys
 from pathlib import Path
 
@@ -10,7 +9,11 @@ def fix_file(filepath: Path, project_root: Path, repo_name: str) -> None:
         lines = f.readlines()
 
     for i, line in enumerate(lines):
-        lines[i] = lines[i].replace("@PROJECT_ROOT@", str(project_root)).replace("@REPO_NAME@", repo_name)
+        lines[i] = (
+            lines[i]
+            .replace("@PROJECT_ROOT@", str(project_root))
+            .replace("@REPO_NAME@", repo_name)
+        )
 
     with open(filepath, "w") as f:
         f.writelines(lines)

@@ -21,9 +21,11 @@ export JAVA_HOME=/usr/local/openjdk-8
 # Check if schema exists
 /opt/apache-hive-metastore-3.0.0-bin/bin/schematool -dbType mysql -info
 
-if [ $? -eq 1 ]; then
-  echo "Getting schema info failed. Probably not initialized. Initializing..."
+if [ $? -ne 0 ]; then
+  echo "Get schema info failed. Probably not initialized. Initializing..."
   /opt/apache-hive-metastore-3.0.0-bin/bin/schematool -dbType mysql -initSchema -verbose
+else
+  echo "Schema already initialized."
 fi
 
 /opt/apache-hive-metastore-3.0.0-bin/bin/start-metastore

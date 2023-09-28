@@ -13,16 +13,15 @@ RUN apt-get update \
 WORKDIR /opt
 
 ENV HADOOP_VERSION=3.2.0
-ENV METASTORE_VERSION=3.0.0
+ENV METASTORE_VERSION=3.1.3
 
 ENV HADOOP_HOME=/opt/hadoop-${HADOOP_VERSION}
 ENV HIVE_HOME=/opt/apache-hive-metastore-${METASTORE_VERSION}-bin
 
 RUN curl -L https://apache.org/dist/hive/hive-standalone-metastore-${METASTORE_VERSION}/hive-standalone-metastore-${METASTORE_VERSION}-bin.tar.gz | tar zxf - && \
     curl -L https://archive.apache.org/dist/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz | tar zxf - && \
-    curl -L https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-8.0.19.tar.gz | tar zxf - && \
-    cp mysql-connector-java-8.0.19/mysql-connector-java-8.0.19.jar ${HIVE_HOME}/lib/ && \
-    rm -rf  mysql-connector-java-8.0.19
+    (cd ${HIVE_HOME}/lib && \
+    curl -O -L https://dlm.mariadb.com/3418100/Connectors/java/connector-java-3.2.0/mariadb-java-client-3.2.0.jar)
 
 COPY conf/metastore-site.xml ${HIVE_HOME}/conf
 COPY conf/core-site.xml ${HADOOP_HOME}/etc/hadoop

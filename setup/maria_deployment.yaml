@@ -3,8 +3,21 @@ kind: ConfigMap
 metadata:
   name: mysql-initdb-config
 data:
-  init.sql: |
-    CREATE DATABASE IF NOT EXISTS ranger;
+  # Using mariadb client instead of an init.sql file since we need to run as root to change settings
+  # and init.sql invocation happens as the MYSQL_USER
+  init.sh: |
+    #!/bin/bash
+    # postStart runs in parallel with container initialization so need to make sure mariadb is up
+    while ! mariadb --user=root --password=admin -e "SELECT 1" &> /dev/null ; do
+      echo "MariaDB command not found. Waiting for 3 seconds..."
+      sleep 3
+    done
+    echo "Increasing max connections"
+    mariadb --user=root --password=admin -e "SET GLOBAL MAX_CONNECTIONS = 1000;"
+    echo "Enabling NO_BACKSLASH_ESCAPES"
+    mariadb --user=root --password=admin -e "SET GLOBAL SQL_MODE = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION,NO_BACKSLASH_ESCAPES';"
+    echo "Creating ranger if not exists"
+    mariadb --user=root --password=admin -e "CREATE DATABASE IF NOT EXISTS ranger;"
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -62,7 +75,7 @@ spec:
     spec:
       containers:
       - name: mariadb
-        image: "mariadb/server:latest"
+        image: "mariadb/server:11.1.2"
         env:
         - name: MYSQL_ROOT_PASSWORD
           value: admin
@@ -84,6 +97,10 @@ spec:
           requests:
             memory: "2G"
             cpu: 1
+        lifecycle:
+          postStart:
+            exec:
+              command: [ "/bin/sh", "-c", "/docker-entrypoint-initdb.d/init.sh" ]
       volumes:
       - name: mariadb-for-hive
         persistentVolumeClaim:
@@ -91,3 +108,4 @@ spec:
       - name: mysql-initdb
         configMap:
           name: mysql-initdb-config
+          defaultMode: 0755

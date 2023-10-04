@@ -65,6 +65,15 @@
     ```bash
     brew install awscli
     ```
+- Install cdk8s
+    - Ubuntu
+      ```bash
+      sudo snap install cdk8s
+      ```
+    - OSX
+      ```bash
+      brew install cdk8s
+      ```
 - Configure aws-cli credentials
   - Create the file `~/.aws/credentials` and make its contents:
     ```

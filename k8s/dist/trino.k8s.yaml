@@ -1,0 +1,237 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trino-coordinator
+spec:
+  minReadySeconds: 0
+  progressDeadlineSeconds: 600
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trino-coordinator
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: trino-coordinator
+        cdk8s.io/metadata.addr: trino-trino-coordinator-c842d29f
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: AWS_ACCESS_KEY_ID
+              value: minio_root_user
+            - name: AWS_SECRET_ACCESS_KEY
+              value: minio_root_password123
+          image: bill/trino-ranger:latest
+          imagePullPolicy: IfNotPresent
+          name: trino-coordinator
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              cpu: "1"
+              memory: 4096Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          startupProbe:
+            failureThreshold: 3
+            tcpSocket:
+              port: 8080
+          volumeMounts:
+            - mountPath: /etc/trino/jvm.config
+              name: trino-cfg-vol
+              subPath: jvm.config
+            - mountPath: /etc/trino/config.properties
+              name: trino-cfg-vol
+              subPath: config.properties.coordinator
+            - mountPath: /etc/trino/node.properties
+              name: trino-cfg-vol
+              subPath: node.properties
+            - mountPath: /etc/trino/catalog/hive.properties
+              name: trino-cfg-vol
+              subPath: hive.properties
+            - mountPath: /etc/trino/catalog/iceberg.properties
+              name: trino-cfg-vol
+              subPath: iceberg.properties
+            - mountPath: /etc/trino/catalog/mysql.properties
+              name: trino-cfg-vol
+              subPath: mysql.properties
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - configMap:
+            name: trino-configs
+          name: trino-cfg-vol
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: trino
+spec:
+  externalIPs: []
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    cdk8s.io/metadata.addr: trino-trino-coordinator-c842d29f
+  type: NodePort
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: trino-pv-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+  volumeMode: Filesystem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: trino-trino-worker-service-c8c08147
+spec:
+  clusterIP: None
+  externalIPs: []
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    cdk8s.io/metadata.addr: trino-trino-worker-c8e23ad7
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: trino-worker
+spec:
+  minReadySeconds: 0
+  podManagementPolicy: OrderedReady
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trino-worker
+  serviceName: trino-trino-worker-service-c8c08147
+  template:
+    metadata:
+      labels:
+        app: trino-worker
+        cdk8s.io/metadata.addr: trino-trino-worker-c8e23ad7
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: AWS_ACCESS_KEY_ID
+              value: minio_root_user
+            - name: AWS_SECRET_ACCESS_KEY
+              value: minio_root_password123
+          image: bill/trino-ranger:latest
+          imagePullPolicy: IfNotPresent
+          name: trino
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2048Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+          startupProbe:
+            failureThreshold: 3
+            tcpSocket:
+              port: 8080
+          volumeMounts:
+            - mountPath: /etc/trino/jvm.config
+              name: trino-cfg-vol
+              subPath: jvm.config
+            - mountPath: /etc/trino/config.properties
+              name: trino-cfg-vol
+              subPath: config.properties.worker
+            - mountPath: /etc/trino/node.properties
+              name: trino-cfg-vol
+              subPath: node.properties
+            - mountPath: /etc/trino/catalog/hive.properties
+              name: trino-cfg-vol
+              subPath: hive.properties
+            - mountPath: /etc/trino/catalog/iceberg.properties
+              name: trino-cfg-vol
+              subPath: iceberg.properties
+            - mountPath: /etc/trino/catalog/mysql.properties
+              name: trino-cfg-vol
+              subPath: mysql.properties
+      dnsPolicy: ClusterFirst
+      hostNetwork: false
+      restartPolicy: Always
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: Always
+        runAsNonRoot: true
+      setHostnameAsFQDN: false
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - configMap:
+            name: trino-configs
+          name: trino-cfg-vol
+        - name: trino-tmp-data
+          persistentVolumeClaim:
+            claimName: trino-pv-claim
+            readOnly: false
+  updateStrategy:
+    rollingUpdate:
+      partition: 0
+    type: RollingUpdate
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    cdk8s.io/metadata.addr: trino-trino-cli-c8fca399
+  name: trino-cli
+spec:
+  automountServiceAccountToken: false
+  containers:
+    - command:
+        - tail
+        - -f
+        - /dev/null
+      image: bill/trino-ranger:latest
+      imagePullPolicy: IfNotPresent
+      name: trino-cli
+      resources:
+        limits:
+          cpu: 1500m
+          memory: 2048Mi
+        requests:
+          cpu: 1000m
+          memory: 512Mi
+      securityContext:
+        allowPrivilegeEscalation: false
+        privileged: false
+        readOnlyRootFilesystem: false
+        runAsNonRoot: false
+  dnsPolicy: ClusterFirst
+  hostNetwork: false
+  restartPolicy: Always
+  securityContext:
+    fsGroupChangePolicy: Always
+    runAsNonRoot: true
+  setHostnameAsFQDN: false
+  terminationGracePeriodSeconds: 30

@@ -13,8 +13,9 @@ eval $(minikube -p minikube docker-env)
 ./fix-k8s-paths.py *.yaml
 
 ### Start k8s mini cluster
-# on a laptop memory and cpu might need to be reduced
-minikube start --memory 16000 --cpus 8 --disk-size 80g --driver docker
+# on a laptop memory and cpu might need to be reduced. if you don't have enough resources, increase
+# them in the Docker Desktop settings
+minikube start --memory 22000 --cpus 8 --disk-size 80g --driver docker
 
 ### Minio Setup
 # create bucket
@@ -32,8 +33,9 @@ kubectl apply -f ./es_deployment.yaml
 kubectl apply -f ./ranger_admin.yaml
 
 ### Trino setup
-kubectl apply -f ./trino-ranger-cfgs.yaml
-kubectl apply -f ./trino-ranger.yaml
+make k8s-config-gen
+kubectl apply -f ./k8s/dist/trino-cfgs.k8s.yaml
+kubectl apply -f ./k8s/dist/trino.k8s.yaml
 
 # Redis setup
 kubectl apply -f ./redis.yaml

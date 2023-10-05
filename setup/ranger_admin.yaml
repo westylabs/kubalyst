@@ -9,7 +9,7 @@ spec:
   - port: 6080
     targetPort: 6080
   selector:
-    app: ranger
+    app: ranger-admin
   externalIPs:
   - 1.1.1.1
 ---
@@ -35,3 +35,7 @@ spec:
         - containerPort: 6080
           name: ranger-admin
         imagePullPolicy: Never
+        resources:
+          limits:
+            cpu: "1"
+            memory: 2048Mi

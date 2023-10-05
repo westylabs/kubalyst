@@ -4,9 +4,9 @@ git submodule update --remote
 
 # build images
 eval $(minikube -p minikube docker-env)
-(cd hive-metastore-docker && ./build_image.sh)
+(cd hive-metastore && ./build_image.sh)
 (cd trino && ./build_image.sh)
-(cd trino-ranger-demo/ranger-admin && ./build_image.sh)
+(cd ranger-admin && ./build_image.sh)
 (cd ../sqlpad/ && ./build_image.sh)
 
 # Set paths in yaml files to point to the current users project root
@@ -33,9 +33,9 @@ kubectl apply -f ./es_deployment.yaml
 kubectl apply -f ./ranger_admin.yaml
 
 ### Trino setup
-make k8s-config-gen
-kubectl apply -f ./k8s/dist/trino-cfgs.k8s.yaml
-kubectl apply -f ./k8s/dist/trino.k8s.yaml
+cd .. && make k8s-config-gen
+kubectl apply -f ../k8s/dist/trino-cfgs.k8s.yaml
+kubectl apply -f ../k8s/dist/trino.k8s.yaml
 
 # Redis setup
 kubectl apply -f ./redis.yaml

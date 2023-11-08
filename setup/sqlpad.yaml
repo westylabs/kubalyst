@@ -1,0 +1,72 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sqlpad
+spec:
+  ports:
+  - protocol: TCP
+    port: 7787  
+    targetPort: 7787
+  selector:
+    app: sqlpad
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sqlpad
+spec:
+  selector:
+    matchLabels:
+      app: sqlpad
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: sqlpad
+    spec:
+      containers:
+      - name: sqlpad
+        image: @REPO_NAME@/sqlpad:latest
+        ports:
+        - containerPort: 7787
+        imagePullPolicy: Never
+        env:   
+          - name: SQLPAD_PORT
+            value: "7787"
+          - name: SQLPAD_BASE_URL
+            value: "/ui/v1"
+          - name: SQLPAD_ADMIN
+            value: "admin@sqlpad.com"
+          - name: SQLPAD_ADMIN_PASSWORD
+            value: "admin"
+          - name: SQLPAD_APP_LOG_LEVEL
+            value: 'debug'
+          - name: SQLPAD_WEB_LOG_LEVEL
+            value: 'warn'
+          - name: SQLPAD_AUTH_PROXY_ENABLED
+            value: 'true'
+          - name: SQLPAD_AUTH_PROXY_AUTO_SIGN_UP
+            value: 'true'
+          - name: SQLPAD_AUTH_PROXY_HEADERS
+            value: 'email:X-WEBAUTH-EMAIL role:X-WEBAUTH-ROLE data.sessionId:X-WEBAUTH-SESSION-ID'
+          - name: SQLPAD_WEBHOOK_ENABLED
+            value: 'true'
+          - name: SQLPAD_WEBHOOK_SIGNOUT_URL
+            value: 'http://host.docker.internal:7786/api/v1/signout-hook'
+          - name: SQLPAD_CONNECTIONS__conduyt__name
+            value: 'Conduyt'
+          - name: SQLPAD_CONNECTIONS__conduyt__driver
+            value: 'conduyt'
+          - name: SQLPAD_CONNECTIONS__conduyt__host
+            value: 'host.docker.internal'
+          - name: SQLPAD_CONNECTIONS__conduyt__username
+            value: 'sqlpad'
+          - name: SQLPAD_CONNECTIONS__conduyt__useremail
+            value: '{{user.email}}'  
+          - name: SQLPAD_CONNECTIONS__conduyt__sessionId
+            value: '{{user.data.sessionId}}'                     
+          - name: SQLPAD_CONNECTIONS__conduyt__multiStatementTransactionEnabled
+            value: 'true'    
+          - name: SQLPAD_CONNECTIONS__conduyt__idleTimeoutSeconds
+            value: '86400'                    

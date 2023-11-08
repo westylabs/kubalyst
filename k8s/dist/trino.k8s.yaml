@@ -26,9 +26,25 @@ spec:
               value: minio_root_password123
           image: bill/trino-ranger:latest
           imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /v1/info
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 20
           name: trino-coordinator
           ports:
             - containerPort: 8080
+          readinessProbe:
+            exec:
+              command:
+                - bin/bash
+                - -c
+                - "[ $(curl -s http://localhost:8080/v1/status | jq .processors) -gt 0 ]"
+            failureThreshold: 5
+            initialDelaySeconds: 10
+            periodSeconds: 10
           resources:
             limits:
               cpu: "1"
@@ -142,9 +158,23 @@ spec:
               value: minio_root_password123
           image: bill/trino-ranger:latest
           imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /v1/info
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 20
           name: trino
           ports:
             - containerPort: 8080
+          readinessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /v1/info
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 20
           resources:
             limits:
               cpu: "1"

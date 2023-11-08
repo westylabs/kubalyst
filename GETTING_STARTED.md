@@ -2,10 +2,12 @@
   - Ubuntu
     ```bash
     sudo apt install pre-commit
+    pre-commit install
     ```
   - OSX
     ```bash
     brew install pre-commit
+    pre-commit install
     ```
 - Setup docker
   - Ubuntu
@@ -50,7 +52,7 @@
 - Install mysql client
   - Ubuntu
     ```bash
-    sudo apt-get install mysql-client 
+    sudo apt-get install mysql-client
     ```
   - OSX
     ```bash

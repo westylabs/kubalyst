@@ -1,32 +1,34 @@
 import os
 from typing import Literal
 
-from cdk8s_plus_27 import (
-    ImagePullPolicy,
-    MemoryResources,
-    CpuResources,
-    Cpu,
-    EnvValue,
-    Deployment,
-    ServiceType,
-    Service,
-    Protocol,
-    ConfigMap,
-    Volume,
-    VolumeMount,
-    DeploymentStrategy,
-    LabelSelector,
-    StatefulSet,
-    ContainerProps,
-    PodSecurityContextProps,
-    ContainerSecurityContextProps,
-    PersistentVolumeAccessMode,
-    PersistentVolumeClaim,
-    Pod,
-    RestartPolicy,
-)
+from cdk8s import ApiObjectMetadata
+from cdk8s import Chart
+from cdk8s import Duration
+from cdk8s import Size
+from cdk8s_plus_27 import ConfigMap
+from cdk8s_plus_27 import ContainerProps
+from cdk8s_plus_27 import ContainerSecurityContextProps
+from cdk8s_plus_27 import Cpu
+from cdk8s_plus_27 import CpuResources
+from cdk8s_plus_27 import Deployment
+from cdk8s_plus_27 import DeploymentStrategy
+from cdk8s_plus_27 import EnvValue
+from cdk8s_plus_27 import ImagePullPolicy
+from cdk8s_plus_27 import LabelSelector
+from cdk8s_plus_27 import MemoryResources
+from cdk8s_plus_27 import PersistentVolumeAccessMode
+from cdk8s_plus_27 import PersistentVolumeClaim
+from cdk8s_plus_27 import Pod
+from cdk8s_plus_27 import PodSecurityContextProps
+from cdk8s_plus_27 import Probe
+from cdk8s_plus_27 import Protocol
+from cdk8s_plus_27 import RestartPolicy
+from cdk8s_plus_27 import Service
+from cdk8s_plus_27 import ServiceType
+from cdk8s_plus_27 import StatefulSet
+from cdk8s_plus_27 import Volume
+from cdk8s_plus_27 import VolumeMount
 from constructs import Construct
-from cdk8s import Chart, Size, ApiObjectMetadata
 
 USER = os.getenv("USER")
 TRINO_IMAGE = f"{USER}/trino-ranger:latest"
@@ -37,7 +39,6 @@ IMAGE_PULL_POLICY = ImagePullPolicy.IF_NOT_PRESENT
 # TODO: develop environment-specific config solution
 # TODO: set memory settings and image different by environment
 # TODO: why is ranger causing an issue?
-# TODO: startup, readiness, liveness probes
 # TODO: a lot of funny business required to get metadata and labels like app: trino-coordinator
 # set properly. Experiment to see if these can be removed and if k8s still binds properly with the
 # built-in labels
@@ -48,6 +49,15 @@ class Trino(Chart):
         "AWS_ACCESS_KEY_ID": EnvValue.from_value("minio_root_user"),
         "AWS_SECRET_ACCESS_KEY": EnvValue.from_value("minio_root_password123"),
     }
+
+    PORT = 8080
+
+    health_probe = Probe.from_http_get(
+        path="/v1/info",
+        port=PORT,
+        failure_threshold=5,
+        period_seconds=Duration.seconds(20),
+    )
 
     def __init__(self, scope: Construct, config_map: ConfigMap):
         super().__init__(scope, "trino")
@@ -71,7 +81,7 @@ class Trino(Chart):
             type=ServiceType.NODE_PORT,
             metadata=ApiObjectMetadata(name="trino"),
         )
-        coordinator.bind(port=8080, target_port=8080, protocol=Protocol.TCP)
+        coordinator.bind(port=self.PORT, target_port=self.PORT, protocol=Protocol.TCP)
         return coordinator
 
     def _create_coordinator_deployment(
@@ -90,7 +100,7 @@ class Trino(Chart):
                 ContainerProps(
                     name="trino-coordinator",
                     image=TRINO_IMAGE,
-                    port=8080,
+                    port=self.PORT,
                     env_variables=Trino.AWS_ENV_VARIABLES,
                     resources={
                         "cpu": CpuResources(limit=Cpu.units(1)),
@@ -104,6 +114,17 @@ class Trino(Chart):
                     volume_mounts=Trino._create_config_volume_mounts(
                         config_volume, "coordinator"
                     ),
+                    readiness=Probe.from_command(
+                        command=[
+                            "bin/bash",
+                            "-c",
+                            f"[ $(curl -s http://localhost:{self.PORT}/v1/status | jq .processors) -gt 0 ]",
+                        ],
+                        initial_delay_seconds=Duration.seconds(10),
+                        period_seconds=Duration.seconds(10),
+                        failure_threshold=5,
+                    ),
+                    liveness=self.health_probe,
                 )
             ],
         )
@@ -155,7 +176,7 @@ class Trino(Chart):
                 ContainerProps(
                     name="trino",
                     image=TRINO_IMAGE,
-                    port=8080,
+                    port=self.PORT,
                     env_variables=Trino.AWS_ENV_VARIABLES,
                     resources={
                         "cpu": CpuResources(limit=Cpu.units(1)),
@@ -169,6 +190,8 @@ class Trino(Chart):
                     security_context=ContainerSecurityContextProps(
                         ensure_non_root=False, read_only_root_filesystem=False
                     ),
+                    readiness=self.health_probe,
+                    liveness=self.health_probe,
                 )
             ],
         )

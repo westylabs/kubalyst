@@ -1,0 +1,41 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ranger-admin
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 6080
+    targetPort: 6080
+  selector:
+    app: ranger-admin
+  externalIPs:
+  - 1.1.1.1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ranger-admin
+spec:
+  selector:
+    matchLabels:
+      app: ranger-admin
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: ranger-admin
+    spec:
+      containers:
+      - name: ranger-admin
+        image: @REPO_NAME@/ranger-admin
+        ports:
+        - containerPort: 6080
+          name: ranger-admin
+        imagePullPolicy: Never
+        resources:
+          limits:
+            cpu: "1"
+            memory: 2048Mi

@@ -1,0 +1,75 @@
+apiVersion: "sparkoperator.k8s.io/v1beta2"
+kind: SparkApplication
+metadata:
+  name: pyspark-pi
+  namespace: default
+spec:
+  type: Python
+  mode: cluster
+  image: @REPO_NAME@/spark-test
+  imagePullPolicy: Never
+  deps:
+    #jars:
+    #- local:///opt/spark-jars/hadoop-aws-3.3.1.jar
+    #- local:///opt/spark-jars/aws-java-sdk-bundle-1.11.901.jar
+    #- local:///opt/spark-jars/delta-core_2.12-2.2.0.jar
+    #- local:///opt/spark-jars/delta-storage-2.2.0.jar
+    packages:
+    - org.apache.hadoop:hadoop-aws:3.3.1
+    - io.delta:delta-core_2.12:2.2.0
+  sparkConf:
+    #spark.jars.packages: "org.apache.hadoop:hadoop-aws:3.3.1,io.delta:delta-core_2.12:2.2.0"
+    spark.driver.extraJavaOptions: "-Divy.cache.dir=/tmp -Divy.home=/tmp"
+    spark.kubernetes.allocation.batch.size: "10"
+    spark.hadoop.fs.s3a.access.key: minio_root_user
+    spark.hadoop.fs.s3a.secret.key: minio_root_password123
+    spark.hadoop.fs.s3a.path.style.access: "true"
+    spark.sql.extensions: "io.delta.sql.DeltaSparkSessionExtension"
+    spark.sql.catalog.spark_catalog: "org.apache.spark.sql.delta.catalog.DeltaCatalog"
+    #spark.sql.extensions: "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions"
+    #spark.sql.catalog.spark_catalog: "org.apache.iceberg.spark.SparkSessionCatalog"
+    #spark.sql.catalog.spark_catalog.type: "hive"
+    #spark.sql.catalog.iceberg: "org.apache.iceberg.spark.SparkCatalog"
+    #spark.sql.catalog.iceberg.type: "hadoop"
+    #spark.sql.catalog.iceberg.warehouse: "s3a://hive/"
+    #spark.sql.catalog.my_catalog.io-impl: "org.apache.iceberg.aws.s3.S3FileIO"
+    #iceberg.engine.hive.enabled: "true"
+  hadoopConf:
+    fs.s3a.endpoint: http://minio:9000
+    fs.s3a.access.key: minio_root_user
+    fs.s3a.secret.key: minio_root_password123
+    fs.s3a.connection.ssl.enabled: "false"
+    fs.s3a.impl: org.apache.hadoop.fs.s3a.S3AFileSystem
+    # fs.s3a.aws.credentials.provider: com.amazonaws.auth.InstanceProfileCredentialsProvider
+  mainApplicationFile: s3a://apps/app.py
+  # mainApplicationFile: local:///opt/spark/examples/src/main/python/app.py
+  sparkVersion: "3.3.2"
+  # restartPolicy:
+  #  type: OnFailure
+  #  onFailureRetries: 3
+  #  onFailureRetryInterval: 10
+  #  onSubmissionFailureRetries: 5
+  #  onSubmissionFailureRetryInterval: 20
+  driver:
+    #env:
+    #- name: AWS_ACCESS_KEY_ID
+    #  value: minio_root_user
+    #- name: AWS_SECRET_KEY
+    #  value: minio_root_password123
+    cores: 1
+    coreLimit: "1200m"
+    memory: "512m"
+    labels:
+      version: 3.3.2
+    serviceAccount: spark
+  executor:
+    #env:
+    #- name: AWS_ACCESS_KEY_ID
+    #  value: minio_root_user
+    #- name: AWS_SECRET_KEY
+    #  value: minio_root_password123
+    cores: 1
+    instances: 1
+    memory: "512m"
+    labels:
+      version: 3.3.2

@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hive-metastore
+spec:
+  selector:
+    app: hive-metastore
+  ports:
+  - port: 9083
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hive-metastore
+spec:
+  selector:
+    matchLabels:
+      app: hive-metastore
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: hive-metastore
+    spec:
+      containers:
+      - name: hive-metastore
+        image: @REPO_NAME@/hive-metastore
+        env:
+        - name: AWS_ACCESS_KEY_ID
+          value: minio_root_user
+        - name: AWS_SECRET_ACCESS_KEY
+          value: minio_root_password123
+        ports:
+        - containerPort: 9083
+        resources:
+          requests:
+            memory: "2G"
+            cpu: 1
+        imagePullPolicy: Never

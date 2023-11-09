@@ -34,6 +34,7 @@ kubectl apply -f ../k8s/dist/trino.k8s.yaml
 
 
 # Sqlpad
+# TODO: update sqlpad solution to not require a git submodule of the repo, which we no longer have
 #kubectl apply -f ./sqlpad.yaml
 
 # Setup port forwards in a different terminal

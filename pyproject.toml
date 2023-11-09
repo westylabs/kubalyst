@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kubalyst"
+version = "0.1.0"
+requires-python = ">=3.9"
+dynamic = ["dependencies"]
+
+[project.scripts]
+
+[tool.setuptools.packages]
+find = {}
+
+[tool.setuptools.dynamic]
+dependencies = { file = "requirements.in" }

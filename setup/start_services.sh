@@ -33,8 +33,6 @@ cd .. && make k8s-config-gen
 kubectl apply -f ../k8s/dist/trino-cfgs.k8s.yaml
 kubectl apply -f ../k8s/dist/trino.k8s.yaml
 
-# Redis setup
-kubectl apply -f ./redis.yaml
 
 # Sqlpad
 kubectl apply -f ./sqlpad.yaml

@@ -1,0 +1,13 @@
+# After changing this, run `make requirements`
+apache-ranger
+boto3
+click
+constructs
+cdk8s
+cdk8s-plus-27
+psutil
+pytest
+pytz
+snowflake-connector-python[pandas] <= 3.0.3
+trino
+types-pytz

@@ -1,0 +1,14 @@
+{
+    "events.role.sensitiveReader": "ROLE_EVENTS_SENSITIVE_READER",
+    "events.role.sensitiveWriter": "ROLE_EVENTS_SENSITIVE_WRITER",
+    "events.role.dataScientist": "ROLE_DATA_SCIENTIST",
+    "events.role.dataLoader": "ROLE_EVENTS_DATALOADER",
+    "global.role.engMetadataReader": "ROLE_GLOBAL_ENG_METADATA_READER",
+    "events.database": "DATABASE_EVENTS",
+    "elt.warehouse.size": "ELT_WAREHOUSE_SIZE",
+    "elt.warehouse.autoSuspendSeconds": "300",
+    "ds.warehouse.size": "DS_WAREHOUSE_SIZE",
+    "ds.warehouse.autoSuspendSeconds": "600",
+    "aws.source.iam.readerArn": "arn:this:is:a:fake:arn",
+    "aws.source.events.s3Path": "s3://fakebucket/is/fun"
+}

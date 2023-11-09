@@ -1,7 +1,3 @@
-# fetch remote submodules
-git submodule update --init --recursive
-git submodule update --remote
-
 # build images
 eval $(minikube -p minikube docker-env)
 (cd hive-metastore && ./build_image.sh)
@@ -44,54 +40,9 @@ kubectl apply -f ./redis.yaml
 kubectl apply -f ./sqlpad.yaml
 
 # Setup port forwards in a different terminal
-virtualenv -p 3.9.6 venv
 . venv/bin/activate
-pip install -r requirements.txt
-pip install -e .
 query-cli setup-port-forwards
 # (leave this running and open a new terminal)
-
-# These commands need to run from repo root
-make create-orddata-db
-make deploy-orgdata-schema-updates
-make create-query-db
-make deploy-query-schema-updates
-
-# Setup hive bucket
-aws s3api create-bucket --bucket hive --endpoint-url http://localhost:9000
-
-# Run all the non-kube services
-# Orgdata service
-# (new terminal)
-. venv/bin/activate
-orgdata
-
-# taskman service
-# (new terminal)
-. venv/bin/activate
-taskman
-# (new terminal)
-. venv/bin/activate
-taskman-worker
-
-# query service
-# (new terminal)
-. venv/bin/activate
-query
-
-# web ui
-. venv/bin/activate
-session
-
-# web ui
-. venv/bin/activate
-webui
-
-# Setup roles and users
-# (new terminal)
-. venv/bin/activate
-query-cli create-default-users -o org123
-query-cli create-default-roles -o org123
 
 # SETUP COMPLETE
 
@@ -99,5 +50,3 @@ query-cli create-default-roles -o org123
 . venv/bin/activate
 python -m pytest query_cli/tests/integration
 
-http://localhost:7786/login
-# Follow the instructions to create an org

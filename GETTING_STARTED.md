@@ -31,24 +31,6 @@
     brew install minikube
     ```
 - Install python 3.9.5
-- Install rust (brew install rust)
-  - Ubuntu
-    ```bash
-    sudo snap install rustup --classic
-    ```
-  - OSX
-    ```bash
-    brew install rust
-    ```
-- Install flyway
-  - Ubuntu
-    ```bash
-    sudo snap install flyway --classic
-    ```
-  - OSX
-    ```bash
-    brew install flyway
-    ```
 - Install mysql client
   - Ubuntu
     ```bash

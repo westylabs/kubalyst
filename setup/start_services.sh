@@ -3,7 +3,6 @@ eval $(minikube -p minikube docker-env)
 (cd hive-metastore && ./build_image.sh)
 (cd trino && ./build_image.sh)
 (cd ranger-admin && ./build_image.sh)
-(cd ../sqlpad/ && ./build_image.sh)
 
 # Set paths in yaml files to point to the current users project root
 ./fix-k8s-paths.py *.yaml
@@ -35,7 +34,7 @@ kubectl apply -f ../k8s/dist/trino.k8s.yaml
 
 
 # Sqlpad
-kubectl apply -f ./sqlpad.yaml
+#kubectl apply -f ./sqlpad.yaml
 
 # Setup port forwards in a different terminal
 . venv/bin/activate

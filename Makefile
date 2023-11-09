@@ -3,7 +3,7 @@ venv: requirements.txt
 	./venv/bin/pip install -r requirements.txt
 	./venv/bin/pip install -e .
 
-requirements.txt: pyproject.toml requirements.in
+requirements: pyproject.toml requirements.in
 	pip-compile --output-file=requirements.txt --resolver=backtracking pyproject.toml
 
 .PHONY: k8s-config-gen

@@ -34,11 +34,9 @@ USER = os.getenv("USER")
 TRINO_IMAGE = f"{USER}/trino-ranger:latest"
 IMAGE_PULL_POLICY = ImagePullPolicy.IF_NOT_PRESENT
 
-# TODO: test with hive metastore
-# TODO: produce yaml in dirs by environment and user (e.g. dist/local/bill, dist/local/gfee)
+# TODO: produce yaml in dirs by environment and user (e.g. dist/local/bill)
 # TODO: develop environment-specific config solution
 # TODO: set memory settings and image different by environment
-# TODO: why is ranger causing an issue?
 # TODO: a lot of funny business required to get metadata and labels like app: trino-coordinator
 # set properly. Experiment to see if these can be removed and if k8s still binds properly with the
 # built-in labels
@@ -149,7 +147,7 @@ class Trino(Chart):
             name="trino-tmp-data",
         )
 
-        # TODO: verify if we need a persistent volume or not. If we do, hostPath is not supported
+        # TODO: I don't think we need a persistent volume, but if we do, hostPath is not supported
         # in cdk8s+ so we'd need to inject it using the escape hatch:
         # https://cdk8s.io/docs/latest/basics/escape-hatches/#patching-api-objects-behind-higher-level-apis
         #   hostPath:

@@ -9,12 +9,14 @@ from typing import Optional
 
 
 def _find_pod_name(pod_name: str) -> Optional[str]:
-    kubectl_output = subprocess.check_output(["kubectl", "get", "po", "-A", "-o=json"])
+    cmd = "kubectl get po -A -o=json"
+    kubectl_output = subprocess.check_output(cmd.split(" "))
     kubectl_output_parsed = json.loads(kubectl_output)
     found_items = [
         item["metadata"]["name"]
         for item in kubectl_output_parsed["items"]
         if item["metadata"]["labels"].get("app") == pod_name
+        or item["metadata"]["labels"].get("service") == pod_name
     ]
     if len(found_items) == 0:
         return None
@@ -47,14 +49,10 @@ class _PortForward:
                 continue
 
             with self.lock:
-                self.proc = subprocess.Popen(
-                    [
-                        "kubectl",
-                        "port-forward",
-                        pod_name,
-                        f"{target_port}:{target_port}",
-                    ],
-                )
+                cmd = f"kubectl port-forward {pod_name} {target_port}:{target_port}"
+                print(cmd)
+
+                self.proc = subprocess.Popen(cmd.split(" "))
 
             assert self.proc is not None
             retcode = self.proc.wait()
@@ -69,9 +67,9 @@ class _PortForward:
 def create_forwards() -> List[Any]:
     trino_process = _PortForward("trino-coordinator", 8080)
     ranger_process = _PortForward("ranger-admin", 6080)
+    ranger_es_process = _PortForward("ranger-es", 9200)
     maria_process = _PortForward("mariadb", 3306)
     minio_process = _PortForward("minio", 9000)
-    redis_process = _PortForward("redis", 6379)
     sqlpad_process = _PortForward("sqlpad", 7787)
 
     return list(
@@ -80,9 +78,9 @@ def create_forwards() -> List[Any]:
             [
                 trino_process,
                 ranger_process,
+                ranger_es_process,
                 maria_process,
                 minio_process,
-                redis_process,
                 sqlpad_process,
             ],
         )

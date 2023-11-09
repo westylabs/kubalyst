@@ -1,13 +1,18 @@
 # kubalyst
 
-**Status: not stable, under development**
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
-Simplify the creation, deployment, monitoring and management of data infrastructure architectural patterns. Generates kubernetes yaml files and a local k8s environment with a stack that contains the following:
+**Status: not stable, under development, contributions welcome**
+
+Simplify the creation, deployment, monitoring and management of data infrastructure architectural
+patterns. Generates kubernetes yaml files and a local k8s environment with a stack that contains the
+following:
 
 * Trino
 * Hive Metastore backed by Mariadb
 * Minio (local S3)
-* Apache Ranger backed by Elastic Search and Mariadb
+* Apache Ranger backed by Elasticsearch and Mariadb
 * SQLPad
 
 ## Local Environment Setup

@@ -6,8 +6,8 @@
 **Status: not stable, under development, contributions welcome**
 
 Simplify the creation, deployment, monitoring and management of data infrastructure architectural
-patterns. Generates kubernetes yaml files and a local k8s environment with a stack that contains the
-following:
+patterns. Leverages the [cdk8](https://cdk8s.io) library to generate kubernetes yaml files and a local k8s environment
+with a stack that contains the following:
 
 * Trino
 * Hive Metastore backed by Mariadb

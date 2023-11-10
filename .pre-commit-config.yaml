@@ -23,4 +23,10 @@ repos:
     rev: 6.0.0
     hooks:
     -   id: flake8
-exclude: ^setup/
+-   repo: local
+    hooks:
+    -   id: unit-tests
+        name: Run unit tests
+        language: system
+        entry: make test
+exclude: ^setup/|^k8s/imports

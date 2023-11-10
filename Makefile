@@ -17,3 +17,7 @@ k8s-config-clean:
 .PHONY: test
 test:
 	./test.sh
+
+.PHONY: forward
+forward:
+	query-cli setup-port-forwards

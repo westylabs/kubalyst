@@ -1,8 +1,8 @@
 from textwrap import dedent
 
+from cdk8s import Chart
 from cdk8s_plus_27 import ConfigMap
 from constructs import Construct
-from cdk8s import Chart
 
 
 class TrinoConfig(Chart):

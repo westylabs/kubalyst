@@ -6,7 +6,7 @@
  To build and clean k8s configs, run make k8s-config-clean or make k8s-config-clean from the project
  directory. These commands are helpful when working directly with kdk8s:
 
-   cat help      Prints this message  
+   cat help      Prints this message
    cdk8s synth   Synthesize k8s manifests to dist/
    cdk8s import  Imports k8s API objects to "imports/k8s"
 

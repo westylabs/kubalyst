@@ -1,6 +1,5 @@
 import pandas
 import pyarrow
-
 from query.commands import type_mapper
 
 type_mapper.trino_type_to_pyarrow_type("array(varchar(14))")

@@ -11,3 +11,6 @@ pytz
 snowflake-connector-python[pandas] <= 3.0.3
 trino
 types-pytz
+
+# required for tests
+kubernetes-validate

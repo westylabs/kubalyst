@@ -13,3 +13,7 @@ k8s-config-gen:
 .PHONY: k8s-config-clean
 k8s-config-clean:
 	rm -rf k8s/dist k8s/Pipfile
+
+.PHONY: test
+test:
+	 pytest k8s/test/test_synth.py::test_synth

@@ -49,4 +49,3 @@ query-cli setup-port-forwards
 # and others directly. The tests in query_cli/tests/integration as written will not pass
 . venv/bin/activate
 python -m pytest query_cli/tests/integration
-

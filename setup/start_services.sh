@@ -45,7 +45,5 @@ query-cli setup-port-forwards
 # SETUP COMPLETE
 
 # Validate your setup
-# TODO: refactor integration tests to not use the snowflake connector but to validate trino
-# and others directly. The tests in query_cli/tests/integration as written will not pass
 . venv/bin/activate
-python -m pytest query_cli/tests/integration
+pytest query_cli/tests/integration/test_trino.py

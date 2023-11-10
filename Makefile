@@ -16,4 +16,4 @@ k8s-config-clean:
 
 .PHONY: test
 test:
-	 pytest k8s/test/test_synth.py::test_synth
+	./test.sh
